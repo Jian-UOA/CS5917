@@ -14,6 +14,10 @@ from std_srvs.srv import SetBool
 class AutoDelivery(Node):
     def __init__(self):
         super().__init__('auto_delivery')
+        self.declare_parameter('delivery_ready', True)
+        self.delivery_ready = self.get_parameter('delivery_ready').get_parameter_value().bool_value
+        self.get_logger().info(f'delivery_ready: {self.delivery_ready}')
+        
         self.keep_alive_timer = self.create_timer(10.0, self.keep_alive_callback)
         self.delivery_subscriber = self.create_subscription(
             Bool,
@@ -21,9 +25,7 @@ class AutoDelivery(Node):
             self.delivery_callback,
             10
         )
-        self.delivery_ready = True
         self.srv = self.create_service(SetBool, 'reset_delivery_ready', self.reset_delivery_ready_callback)
-        self.get_logger().info('delivery_ready default value: True')
 
     def delivery_callback(self, msg):
         if not self.delivery_ready:

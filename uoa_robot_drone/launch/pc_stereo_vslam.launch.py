@@ -269,7 +269,7 @@ def generate_launch_description():
         IncludeLaunchDescription(
             PythonLaunchDescriptionSource([auto_delivery_launch]),
             launch_arguments=[
-                ('delivery_ready', True),
+                ('delivery_ready', 'true'),  # Set delivery ready state to true
             ]
         ),
       
