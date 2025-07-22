@@ -265,13 +265,13 @@ def generate_launch_description():
             remappings=remappings
         ),
 
-        # 8) Delivery parcels automatically (only if localization is true)
-        IncludeLaunchDescription(
-            PythonLaunchDescriptionSource([auto_delivery_launch]),
-            launch_arguments=[
-                ('delivery_ready', 'true'),  # Set delivery ready state to true
-            ]
-        ),
+        # # 8) Delivery parcels automatically (only if localization is true)
+        # IncludeLaunchDescription(
+        #     PythonLaunchDescriptionSource([auto_delivery_launch]),
+        #     launch_arguments=[
+        #         ('delivery_ready', 'true'),  # Set delivery ready state to true
+        #     ]
+        # ),
       
         # 9) RTAB-Map GUI (optional)
         Node(
