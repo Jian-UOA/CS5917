@@ -22,7 +22,7 @@ def generate_launch_description():
             output='screen',
             parameters=[{'delivery_ready': LaunchConfiguration('delivery_ready')}],
             remappings=[
-                ('delivery_signal', '/delivery_signal')
+                ('delivery_signal', '/uoa/delivery_signal')
             ]
         )
     ])
