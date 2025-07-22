@@ -64,17 +64,17 @@ class RobotPositionListener(Node):
         )
 
         # Log the current position, orientation, and distance to goal
-        self.get_logger().info(f'Current Position: ({current_position.x}, {current_position.y}, {current_position.z})')
-        self.get_logger().info(f'Current Orientation: ({current_orientation.x}, {current_orientation.y}, {current_orientation.z}, {current_orientation.w})')
-        self.get_logger().info(f'Distance to Goal: {distance_to_goal}')
-        self.get_logger().info(f'Orientation Difference: {orientation_difference}')
+        self.get_logger().debug(f'Current Position: ({current_position.x}, {current_position.y}, {current_position.z})')
+        self.get_logger().debug(f'Current Orientation: ({current_orientation.x}, {current_orientation.y}, {current_orientation.z}, {current_orientation.w})')
+        self.get_logger().debug(f'Distance to Goal: {distance_to_goal}')
+        self.get_logger().debug(f'Orientation Difference: {orientation_difference}')
 
         # Check if the robot is close enough to the goal position and orientation
         if distance_to_goal < self.distance_threshold and orientation_difference < self.orientation_threshold:
-            self.get_logger().info('Robot is at the goal position and orientation.')
+            self.get_logger().debug('Robot is at the goal position and orientation.')
             self.delivery_signal.data = True
         else:
-            self.get_logger().info('Robot is not at the goal position and orientation.')
+            self.get_logger().debug('Robot is not at the goal position and orientation.')
             self.delivery_signal.data = False
 
         # Publish the delivery signal
@@ -85,10 +85,10 @@ def main(args=None):
     node = RobotPositionListener()
     try:
         rclpy.spin(node)
-    except keyboardInterrupt:
+    except KeyboardInterrupt:
         node.get_logger().info(node.get_name() + ' has been stopped by user.')
     finally:
-        node.get_logger().info('Shutting down' + node.get_name() + 'node.')
+        node.get_logger().info('Shutting down ' + node.get_name() + ' node.')
         rclpy.shutdown()
 
 if __name__ == '__main__':

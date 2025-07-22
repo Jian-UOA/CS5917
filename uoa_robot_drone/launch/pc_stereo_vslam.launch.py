@@ -97,34 +97,88 @@ def generate_launch_description():
         # DeclareLaunchArgument('camera_model',   default_value='zed2',
         #                        description='ZED camera model for zed_wrapper'),
         
-        # Establish TF connection between TurtleBot3 and ZED camera
+        # 1) Establish TF connection between visual odometry frame and tb3/base_link
+        Node(
+            package='tf2_ros',
+            executable='static_transform_publisher',
+            name='viz_odom_to_tb3_base_link',
+            namespace='tf_publishers',
+            arguments=[
+                '--frame-id', 'vo/odom',
+                '--child-frame-id', 'tb3/base_link',
+                '--x', '0', '--y', '0', '--z', '0',
+                '--roll', '0', '--pitch', '0', '--yaw', '0'
+            ],
+            parameters=[{'period': 0.1}],
+        ),
+        # # Establish TF connection between visual odometry frame and ZED camera link
         # Node(
         #     package='tf2_ros',
         #     executable='static_transform_publisher',
-        #     name='tb3_to_zed_camera_transform',
-        #     namespace='tf_publishers',  # Add namespace to avoid conflicts
-        #     arguments=['0.083', '0', '0.094', '0', '0', '0', 'tb3/base_link', 'zed_camera_link'],
-        #     # arguments: x y z yaw pitch roll parent_frame child_frame
-        #     # Connect tb3/base_link to zed_camera_link, camera is 8.3cm in front and 9.4cm above base_link
-        #     parameters=[{'period': 0.1}],  # Publish every 0.1 seconds
-        # ),
-        # === All ZED related static_transform_publisher nodes to ensure TF is published regularly ===
-        # Node(
-        #     package='tf2_ros',
-        #     executable='static_transform_publisher',
-        #     name='zed_camera_to_left_optical_transform',
+        #     name='viz_odom_to_zed_camera_link',
         #     namespace='tf_publishers',
-        #     arguments=['0', '0', '0', '-1.5708', '0', '-1.5708', 'zed_camera_link', 'zed_left_camera_optical_frame'],
+        #     arguments=[
+        #         '--frame-id', 'vo/odom',
+        #         '--child-frame-id', 'zed_camera_link',
+        #         '--x', '0', '--y', '0', '--z', '0',
+        #         '--roll', '0', '--pitch', '0', '--yaw', '0'
+        #     ],
         #     parameters=[{'period': 0.1}],
         # ),
-        # Node(
-        #     package='tf2_ros',
-        #     executable='static_transform_publisher',
-        #     name='zed_camera_to_right_optical_transform',
-        #     namespace='tf_publishers',
-        #     arguments=['0', '0', '0', '-1.5708', '0', '-1.5708', 'zed_camera_link', 'zed_right_camera_optical_frame'],
-        #     parameters=[{'period': 0.1}],
-        # ),
+
+        # 2） Establish TF connection between tb3/base_link and zed_camera_link
+        Node(
+            package='tf2_ros',
+            executable='static_transform_publisher',
+            name='tb3_to_zed_camera_transform',
+            namespace='tf_publishers',  # Add namespace to avoid conflicts
+            # arguments=['0.083', '0', '0.094', '0', '0', '0', 'tb3/base_link', 'zed_camera_link'],
+            # arguments: x y z yaw pitch roll parent_frame child_frame
+            # Connect tb3/base_link to zed_camera_link, camera is 8.3cm in front and 9.4cm above base_link
+            arguments=[
+                '--frame_id', 'tb3/base_link',
+                '--child_frame_id', 'zed_camera_link',
+                '--x', '0.083',
+                '--y', '0.0',
+                '--z', '0.094',
+                '--roll', '0.0',
+                '--pitch', '0.0',
+                '--yaw', '0.0',
+            ],
+            output='screen',
+            parameters=[{'period': 0.1}],  # Publish every 0.1 seconds
+        ),
+        
+        # 3) Establish TF connections for zed_camera_link and zed_left_camera_optical_frame
+        Node(
+            package='tf2_ros',
+            executable='static_transform_publisher',
+            name='zed_camera_to_left_optical_transform',
+            namespace='tf_publishers',
+            arguments=[
+                '--frame-id', 'zed_camera_link',
+                '--child-frame-id', 'zed_left_camera_optical_frame',
+                '--x', '0', '--y', '0', '--z', '0',
+                '--roll', '-1.5708', '--pitch', '0', '--yaw', '-1.5708'
+            ],
+            parameters=[{'period': 0.1}],
+        ),
+
+        # 4) Establish TF connections for zed_camera_link and zed_right_camera_optical_frame
+        Node(
+            package='tf2_ros',
+            executable='static_transform_publisher',
+            name='zed_camera_to_right_optical_transform',
+            namespace='tf_publishers',
+            arguments=[
+                '--frame-id', 'zed_camera_link',
+                '--child-frame-id', 'zed_right_camera_optical_frame',
+                '--x', '0', '--y', '0', '--z', '0',
+                '--roll', '-1.5708', '--pitch', '0', '--yaw', '-1.5708'
+            ],
+            parameters=[{'period': 0.1}],
+        ),
+
         # Node(
         #     package='tf2_ros',
         #     executable='static_transform_publisher',
@@ -134,8 +188,7 @@ def generate_launch_description():
         #     parameters=[{'period': 0.1}],
         # ),
         
-        # Decompress ZED camera images - convert compressed images to uncompressed format for convert_image_format node
-        # Left camera image decompression
+        # 5) Left camera image decompression
         Node(
             package='image_transport', 
             executable='republish', 
@@ -148,8 +201,8 @@ def generate_launch_description():
                 ('out', '/uoa/cs5917/left/image_rect_color')
             ]
         ),
-        
-        # Right camera image decompression
+
+        # 6) Right camera image decompression
         Node(
             package='image_transport', 
             executable='republish', 
