@@ -48,8 +48,8 @@ def generate_launch_description():
             'visual_odometry': True,  # Enable visual odometry
             'icp_odometry': False,  # Disable ICP (Iterative Closest Point) odometry
             'stereo': True,  # Enable stereo processing
-            'subscribe_rgbd': True,  # Subscribe to RGBD images
-            'subscribe_stereo': False,  # Disable stereo subscription since we are using RGBD images
+            'subscribe_rgbd': False,  # Subscribe to RGBD images
+            'subscribe_stereo': True,  # Disable stereo subscription since we are using RGBD images
             'subscribe_odom_info': True,  # True: use internal odometry, False: use external odometry
             'subscribe_scan': False,  # Disable scan subscription
             'approx_sync': True,  # Enable approximate sync for stereo images

@@ -1,2 +1,4 @@
 # Ignore the files under the folders __pycache__
 __pycache__/
+uoa_robot_drone/uoa_robot_drone/__pycache__/robot_position_listener.cpython-310.pyc
+.gitignore

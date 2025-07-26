@@ -1,8 +1,28 @@
+'''
+uoa_robot_drone/robot_position_listener.py
+This script listens to the robot's position and checks if it is close enough to a specified goal position and orientation.
+If the robot is close enough, it publishes a delivery signal.
+It also provides a service to update the goal position and orientation dynamically.
+This code is part of the uoa_robot_drone package, which is used for autonomous delivery.
+Copyright (c) University of Aberdeen.
+This code is licensed under the Apache-2.0 license.
+
+Author: Jian Chen
+Email: j.chen3.24@abdn.ac.uk
+
+Usage:
+1. Start the ROS 2 node:
+   ros2 run uoa_robot_drone robot_position_listener
+2. To update the goal position and orientation, call the service:
+   ros2 service call /set_robot_goal_pose uoa_robot_drone/srv/SetRobotGoalPose "{position_x: 1.0, position_y: 2.0,
+'''
+
 import rclpy
 from rclpy.node import Node
 from geometry_msgs.msg import PoseWithCovarianceStamped
 from std_msgs.msg import Bool
 import math
+from uoa_robot_interfaces.srv import SetRobotGoalPose  # Import the service definition
 
 class RobotPositionListener(Node):
     def __init__(self):
@@ -42,6 +62,23 @@ class RobotPositionListener(Node):
 
         # Create a subscription to the robot's pose
         self.subscription = self.create_subscription(PoseWithCovarianceStamped, '/localization_pose', self.pose_callback, 10)
+        
+        self.srv = self.create_service(SetRobotGoalPose, 'set_robot_goal_pose', self.set_robot_goal_pose_callback)
+
+    def set_robot_goal_pose_callback(self, request, response):
+        # Update the goal position and orientation based on the service request
+        self.goal_position_x = request.position_x
+        self.goal_position_y = request.position_y
+        self.goal_orientation_z = request.orientation_z
+        self.goal_orientation_w = request.orientation_w
+
+        # Log the updated goal pose
+        self.get_logger().info(f'Updated Goal Position: ({self.goal_position_x}, {self.goal_position_y})')
+        self.get_logger().info(f'Updated Goal Orientation: ({self.goal_orientation_z}, {self.goal_orientation_w})')
+
+        response.success = True
+        response.message = 'Goal pose updated successfully'
+        return response
 
     def pose_callback(self, msg):
         # Extract the robot's current position and orientation

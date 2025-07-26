@@ -1,0 +1,7 @@
+image: orin_stereo_ElphinstoneFlat_202507201629.pgm
+resolution: 0.05
+origin: [-2.87786, -1.21238, 0.0]
+negate: 0
+occupied_thresh: 0.5
+free_thresh: 0.196
+
