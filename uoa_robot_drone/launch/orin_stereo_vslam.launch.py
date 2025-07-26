@@ -58,7 +58,7 @@ def generate_launch_description():
             'Rtabmap/MemoryThr': '2000', # The threshold for the number of nodes retained in the working memory. When the number of nodes in the working memory exceeds this value, RTAB-Map will transfer older nodes to the long-term memory and may extract local representative nodes from it for subsequent loop closure detection, thereby optimizing memory usage.
             'map_negative_poses_ignored': True,
             'qos_image': 1, # 1：sensor_data（best_effort + volatile + keep_last 10）2：default（reliable + volatile + keep_last 10）
-            'Grid/RangeMin': '0.2',  # Minimum range for grid map
+            'Grid/RangeMin': '0.35',  # Minimum range for grid map
             'Grid/Sensor': '1',  # 0=lidar, 1=camera/rgbd/pointcloud, 2=both.
             'Reg/Force3DoF': 'true',  # Force 3 DoF registration
             'wait_for_transform': 0.5, # Wait for transform to be available before processing images
