@@ -297,34 +297,14 @@ def generate_launch_description():
         #     remappings=remappings
         # ),
 
-        # 7) Listen to robot position and publish delivery signal
-        Node(
-            condition=IfCondition(localization),
-            package='uoa_robot_drone', executable='robot_position_listener', output='screen',
-            namespace='uoa',
-            name='robot_position_listener',
-            # Use parameters to set goal position and orientation
-            parameters=[{
-                'goal_position_x': 0.66,
-                'goal_position_y': 0.78,
-                'goal_position_z': 0.0,
-                'goal_orientation_x': 0.0,
-                'goal_orientation_y': 0.0,
-                'goal_orientation_z': 0.58,  
-                'goal_orientation_w': 0.80,
-                'distance_threshold': 0.1,
-                'orientation_threshold': 0.1
-            }],
-            remappings=remappings
+        # 7) Delivery parcels automatically (only if localization is true)
+        IncludeLaunchDescription(
+            PythonLaunchDescriptionSource([auto_delivery_launch]),
+            launch_arguments=[
+                ('delivery_ready', 'true'),  # Set delivery ready state to true
+                ('localization', localization)  # Pass the localization argument
+            ]
         ),
-
-        # # 8) Delivery parcels automatically (only if localization is true)
-        # IncludeLaunchDescription(
-        #     PythonLaunchDescriptionSource([auto_delivery_launch]),
-        #     launch_arguments=[
-        #         ('delivery_ready', 'true'),  # Set delivery ready state to true
-        #     ]
-        # ),
       
         # 9) RTAB-Map GUI (optional)
         Node(

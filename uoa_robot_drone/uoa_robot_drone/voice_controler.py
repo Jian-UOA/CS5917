@@ -13,7 +13,7 @@ async def speak(text, voice="en-GB-LibbyNeural"):
     os.remove("temp_tts.mp3")
 
  # Voice recognition thread
-def listen_for_land_command(trigger_phrase, on_land_callback):
+def listen_for_land_command(on_land_callback):
     recognizer = sr.Recognizer()
     mic = sr.Microphone()
     with mic as source:
@@ -24,8 +24,8 @@ def listen_for_land_command(trigger_phrase, on_land_callback):
             try:
                 result = recognizer.recognize_google(audio, language='en-GB')
                 print(f"Heard: {result}")
-                if trigger_phrase in result:
-                    on_land_callback()
+                should_exit = on_land_callback(result)
+                if should_exit:
                     break
             except sr.UnknownValueError:
                 continue
@@ -40,13 +40,16 @@ def main():
     asyncio.run(speak("Aberdeen number one express drone has completed delivery and is hovering, waiting for the land command."))
     
     # 2. Start listening thread, wait for voice command
-    def on_land():
-        asyncio.run(speak("Number one express drone is landing now."))
-        print("[Simulated] Execute land command: tello.land()")
-        time.sleep(3)
-        asyncio.run(speak("This delivery service is complete. Have a nice day. Goodbye."))
-        
-    listen_for_land_command("number one can land", on_land)
+    def on_land(command_text):
+        if command_text == "number one can land":
+            asyncio.run(speak("Number one express drone is landing now."))
+            print("[Simulated] Execute land command: tello.land()")
+            time.sleep(3)
+            asyncio.run(speak("This delivery service is complete. Have a nice day. Goodbye."))
+            return True
+        return False
+
+    listen_for_land_command(on_land)
 
 if __name__ == "__main__":
     main()
