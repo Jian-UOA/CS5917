@@ -42,11 +42,14 @@ def generate_launch_description():
 
     # RTAB-Map parameters
     parameters={
-            # 'subscribe_depth': "true" (bool, default: "true") Subscribe to depth image.
+            'subscribe_depth': False, # (bool, default: "true") Subscribe to depth image.
             'subscribe_scan': False,  # (bool, default: "false") Subscribe to laser scan.
             # 'subscribe_scan_cloud': "false" (bool, default: "false") Subscribe to laser scan point cloud.
             'subscribe_stereo': True,  # (bool, default: "false") Subscribe to stereo images. Enable nodes (rtabmap_sync, rtabmap_odom, rtabmap_slam(rtabmap)) to subscribe to stereo images
+            'subscribe_rgb': False, 
             'subscribe_rgbd': False,  # (bool, default: "false") Subscribe to rgbd_image topic, mainly involving nodes rtabmap_odom and rtabmap_slam(rtabmap).
+            # 'subscribe_odom_info': False,  # Not suitable for rtabmap. Use external odometry
+            'subscribe_odom_info': True,  # Not suitable for rtabmap. True: use internal odometry, False: use external odometry
 
             'frame_id':'zed_camera_link', # (string, default: "base_link") The frame attached to the mobile base. The frame_id is the coordinate frame's name when the original visual data of the specific sensor is published, involving nodes rtabmap_sync, rtabmap_odom, rtabmap_slam(rtabmap).
             # 'map_frame_id': "map" (string, default: "map") The frame attached to the map.
@@ -54,8 +57,6 @@ def generate_launch_description():
             # 'base_frame_id': 'zed_camera_link', # Not suitable for rtabmap. It is not a rtabmap parameter.  The base_frame_id is the coordinate frame's name for the robot's base, involving nodes rtabmap_odom and rtabmap_slam(rtabmap).
             # 'visual_odometry': True,  # Not suitable for rtabmap. Enable visual odometry
             # 'icp_odometry': False,  # Not suitable for rtabmap. ICP (Iterative Closest Point) odometry refers to the way of estimating the motion by aligning the closest points between two frames of the point clouds from different sensors iteratively, mainly involving node rtabmap_odom.
-            # 'subscribe_odom_info': True,  # Not suitable for rtabmap. True: use internal odometry, False: use external odometry
-            # 'subscribe_odom_info': False,  # Not suitable for rtabmap. Use external odometry
             # 'wait_for_transform': True, # (bool, default: "true") Wait (maximum wait_for_transform_duration sec) for transform when a tf transform is not still available. mainly involving nodes rtabmap_odom and rtabmap_slam(rtabmap). 
             # wait_for_transform_duration (double, default: 0.1) Wait duration for wait_for_transform.
             'gen_scan': True, # (bool, default: "false") Generate laser scans from depth images (using the middle horizontal line of the depth image). Not generated if subscribe_scan or subscribe_scan_cloud are true.
@@ -74,7 +75,7 @@ def generate_launch_description():
             'Reg/strategy': '0',  # Registration strategy for loop closure, neighbor link refining, proximity detection, involving node rtabmap_slam(rtabmap). 0: Visual, 1: ICP, 2: Visual + ICP
             'Rtabmap/TimeThr': '2000', # Maximum time (in milliseconds) that RTAB-Map is allowed to spend on processing each frame, mainly involving node rtabmap_slam. Type value: 700
             'Rtabmap/MemoryThr': '2000', # The threshold for the number of nodes retained in the working memory. When the number of nodes in the working memory exceeds this value, RTAB-Map will transfer older nodes to the long-term memory and may extract local representative nodes from it for subsequent loop closure detection, thereby optimizing memory usage, mainly involving node rtabmap_slam.
-            'Rtabmap/DetectionRate': 10.0, 
+            'Rtabmap/DetectionRate': '10.0', 
             'map_negative_poses_ignored': True, # Ignore negative poses in the map, mainly involving node rtabmap_slam(rtabmap)
             'qos_image': 1, # Quality of Service, 1：sensor_data（best_effort(no retransmission when missing packages) + volatile(the history is not retained when the node restarting) + keep_last 10(only cache the latest 10 messages)）2：default（reliable(the missing packages will be retransmitted) + volatile + keep_last 10）, mainly involving nodes rtabmap_sync, rtabmap_odom, rtabmap_slam(rtabmap).
             'Grid/RangeMin': '0.0',  # Ignore points closer than this distance, mainly involving node rtabmap_slam(rtabmap).
@@ -93,10 +94,10 @@ def generate_launch_description():
         # Stereo camera data
         # ('odom_rgbd_image', '/stereo_camera/rgbd_image'),
         # ('global_pose', '/zed/zed_node/pose_with_covariance'),
-        ('imu', '/zed/zed_node/imu/data'),
-        # ('odom', '/vo/odom'), # Internal odometry topic from stereo_odometry node
-        ('odom', '/zed/zed_node/odom'), # External odometry topic
-        # ('rgbd_image', '/stereo_camera/rgbd_image'), # From internal stereo sync node
+        # ('imu', '/zed/zed_node/imu/data'),
+        ('odom', '/vo/odom'), # Internal odometry topic from stereo_odometry node
+        # ('odom', '/zed/zed_node/odom'), # External odometry topic
+        ('rgbd_image', '/stereo_camera/rgbd_image'), # From internal stereo sync node
         ('left/image_rect', '/uoa/orin/left/image_rect_bgr'),
         ('right/image_rect', '/uoa/orin/right/image_rect_bgr'),
         ('left/camera_info', '/zed/zed_node/left/camera_info'), 
@@ -114,11 +115,11 @@ def generate_launch_description():
     )
 
     # Include ZED Wrapper launch
-    zed_wrapper_launch = PathJoinSubstitution([
-        get_package_share_directory('zed_wrapper'),
-        'launch',
-        'zed_camera.launch.py'
-    ])
+    # zed_wrapper_launch = PathJoinSubstitution([
+    #     get_package_share_directory('zed_wrapper'),
+    #     'launch',
+    #     'zed_camera.launch.py'
+    # ])
     
     return LaunchDescription([
         # Declare launch arguments
@@ -273,20 +274,18 @@ def generate_launch_description():
         ),
 
         # # 11) Synchronize stereo streams
-        # Node(
-        #     package='rtabmap_sync', executable='stereo_sync', output='screen',
-        #     namespace='stereo_camera',
-        #     name='stereo_sync',
-        #     parameters=[parameters],
-        #     remappings=remappings
-        # ),
+        Node(
+            package='rtabmap_sync', executable='stereo_sync', output='screen',
+            namespace='stereo_camera',
+            remappings=remappings
+        ),
 
         # 12) Visual Odometry (VO) node
-        # Node(
-        #     package='rtabmap_odom', executable='stereo_odometry', output='screen',
-        #     parameters=[parameters],
-        #     remappings=remappings
-        # ),
+        Node(
+            package='rtabmap_odom', executable='stereo_odometry', output='screen',
+            parameters=[parameters],
+            remappings=remappings
+        ),
 
         # 13) SLAM node
         Node(
@@ -304,7 +303,7 @@ def generate_launch_description():
             parameters=[parameters, {
                 'Mem/IncrementalMemory': 'False',
                 'Mem/InitWMWithAllNodes': 'True',
-                'Rtabmap/DetectionRate': '5.0',  # Frequency of publishing the topic /localization_pose
+                'Rtabmap/DetectionRate': '10.0',  # Frequency of publishing the topic /localization_pose
             }],
             remappings=remappings
         ),
