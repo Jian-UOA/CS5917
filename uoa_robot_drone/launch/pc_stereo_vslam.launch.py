@@ -43,14 +43,13 @@ def generate_launch_description():
     parameters={
           'frame_id':'zed_camera_link',
         #   'odom_frame_id': 'vo/odom',            # VO uses its own odometry frame to avoid conflicts
-          'base_frame_id': 'zed_camera_link',
           'subscribe_stereo': True,
-        #   'approx_sync': False, # odom is generated from images, so we can exactly sync all inputs
+          'approx_sync': False, # odom is generated from images, so we can exactly sync all inputs
           'map_negative_poses_ignored': True,
         #   'subscribe_odom_info': False,
         #   'wait_for_transform': 1.0,
           # RTAB-Map's internal parameters should be strings
-          'OdomF2M/MaxSize': '2000',
+          'OdomF2M/MaxSize': '5000',
           'Vis/MinInliers': '10',  # Lower the minimum inlier requirement
           'GFTT/MinDistance': '10',
           'GFTT/QualityLevel': '0.001',
@@ -63,7 +62,8 @@ def generate_launch_description():
         # ('odom_rgbd_image', '/stereo_camera/rgbd_image'),
         # ('global_pose', '/zed/zed_node/pose_with_covariance'),
         # ('imu', '/zed/zed_node/imu/data'),
-        ('odom', '/vo/odom'),
+        # ('odom', '/vo/odom'),
+        ('odom', '/zed/zed_node/odom'),
         ('left/image_rect', '/uoa/cs5917/left/image_rect_color'),
         ('right/image_rect', '/uoa/cs5917/right/image_rect_color'),
         ('left/camera_info', '/zed/zed_node/left/camera_info'), 
@@ -98,56 +98,57 @@ def generate_launch_description():
         #                        description='ZED camera model for zed_wrapper'),
         
         # 1) Establish TF connection between visual odometry frame and tb3/base_link
-        Node(
-            package='tf2_ros',
-            executable='static_transform_publisher',
-            name='viz_odom_to_tb3_base_link',
-            namespace='tf_publishers',
-            arguments=[
-                '--frame-id', 'vo/odom',
-                '--child-frame-id', 'tb3/base_link',
-                '--x', '0', '--y', '0', '--z', '0',
-                '--roll', '0', '--pitch', '0', '--yaw', '0'
-            ],
-            parameters=[{'period': 0.1}],
-        ),
-        # # Establish TF connection between visual odometry frame and ZED camera link
         # Node(
         #     package='tf2_ros',
         #     executable='static_transform_publisher',
-        #     name='viz_odom_to_zed_camera_link',
+        #     name='viz_odom_to_tb3_base_link',
         #     namespace='tf_publishers',
         #     arguments=[
         #         '--frame-id', 'vo/odom',
-        #         '--child-frame-id', 'zed_camera_link',
+        #         '--child-frame-id', 'tb3/base_link',
         #         '--x', '0', '--y', '0', '--z', '0',
         #         '--roll', '0', '--pitch', '0', '--yaw', '0'
         #     ],
         #     parameters=[{'period': 0.1}],
         # ),
-
-        # 2） Establish TF connection between tb3/base_link and zed_camera_link
+        
+        # # Establish TF connection between visual odometry frame and ZED camera link
         Node(
             package='tf2_ros',
             executable='static_transform_publisher',
-            name='tb3_to_zed_camera_transform',
-            namespace='tf_publishers',  # Add namespace to avoid conflicts
-            # arguments=['0.083', '0', '0.094', '0', '0', '0', 'tb3/base_link', 'zed_camera_link'],
-            # arguments: x y z yaw pitch roll parent_frame child_frame
-            # Connect tb3/base_link to zed_camera_link, camera is 8.3cm in front and 9.4cm above base_link
+            name='viz_odom_to_zed_camera_link',
+            namespace='tf_publishers',
             arguments=[
-                '--frame_id', 'tb3/base_link',
-                '--child_frame_id', 'zed_camera_link',
-                '--x', '0.083',
-                '--y', '0.0',
-                '--z', '0.094',
-                '--roll', '0.0',
-                '--pitch', '0.0',
-                '--yaw', '0.0',
+                '--frame-id', 'odom',
+                '--child-frame-id', 'zed_camera_link',
+                '--x', '0', '--y', '0', '--z', '0',
+                '--roll', '0', '--pitch', '0', '--yaw', '0'
             ],
-            output='screen',
-            parameters=[{'period': 0.1}],  # Publish every 0.1 seconds
+            parameters=[{'period': 0.1}],
         ),
+
+        # # 2） Establish TF connection between tb3/base_link and zed_camera_link
+        # Node(
+        #     package='tf2_ros',
+        #     executable='static_transform_publisher',
+        #     name='tb3_to_zed_camera_transform',
+        #     namespace='tf_publishers',  # Add namespace to avoid conflicts
+        #     # arguments=['0.083', '0', '0.094', '0', '0', '0', 'tb3/base_link', 'zed_camera_link'],
+        #     # arguments: x y z yaw pitch roll parent_frame child_frame
+        #     # Connect tb3/base_link to zed_camera_link, camera is 8.3cm in front and 9.4cm above base_link
+        #     arguments=[
+        #         '--frame_id', 'tb3/base_link',
+        #         '--child_frame_id', 'zed_camera_link',
+        #         '--x', '0.083',
+        #         '--y', '0.0',
+        #         '--z', '0.094',
+        #         '--roll', '0.0',
+        #         '--pitch', '0.0',
+        #         '--yaw', '0.0',
+        #     ],
+        #     output='screen',
+        #     parameters=[{'period': 0.1}],  # Publish every 0.1 seconds
+        # ),
         
         # 3) Establish TF connections for zed_camera_link and zed_left_camera_optical_frame
         Node(

@@ -106,10 +106,12 @@ class AutoDelivery(Node):
             battery = self.tello.get_battery()
             self.get_logger().info(f'[keep_alive] The battery level is {battery}%')
 
-            if 
+            if not self.delivery_ready:
+                self.get_logger().info('Delivery not ready, waiting for reset...')
 
             if not self.current_delivery_signal.data:
-                self.get_logger().info('[keep_alive] Waiting for delivery signal...')
+                self.get_logger().info('[keep_alive] Waiting for delivery order...')
+                
         except Exception as e:
             self.get_logger().error(f'[keep_alive] Error sending keepalive: {e}')
             # Attempt to reconnect if keepalive fails
@@ -117,11 +119,9 @@ class AutoDelivery(Node):
 
     def delivery_callback(self, msg):
         if not self.delivery_ready:
-            self.get_logger().info('Delivery not ready, waiting for reset...')
             return
         
         if not msg.data:
-            self.get_logger().info('No delivery order received, waiting for delivery signal...')
             return
         else:
             self.current_delivery_signal.data = msg.data
