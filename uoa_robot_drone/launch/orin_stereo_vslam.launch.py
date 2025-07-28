@@ -74,6 +74,7 @@ def generate_launch_description():
             'Reg/strategy': '0',  # Registration strategy for loop closure, neighbor link refining, proximity detection, involving node rtabmap_slam(rtabmap). 0: Visual, 1: ICP, 2: Visual + ICP
             'Rtabmap/TimeThr': '2000', # Maximum time (in milliseconds) that RTAB-Map is allowed to spend on processing each frame, mainly involving node rtabmap_slam. Type value: 700
             'Rtabmap/MemoryThr': '2000', # The threshold for the number of nodes retained in the working memory. When the number of nodes in the working memory exceeds this value, RTAB-Map will transfer older nodes to the long-term memory and may extract local representative nodes from it for subsequent loop closure detection, thereby optimizing memory usage, mainly involving node rtabmap_slam.
+            'Rtabmap/DetectionRate': 10.0, 
             'map_negative_poses_ignored': True, # Ignore negative poses in the map, mainly involving node rtabmap_slam(rtabmap)
             'qos_image': 1, # Quality of Service, 1：sensor_data（best_effort(no retransmission when missing packages) + volatile(the history is not retained when the node restarting) + keep_last 10(only cache the latest 10 messages)）2：default（reliable(the missing packages will be retransmitted) + volatile + keep_last 10）, mainly involving nodes rtabmap_sync, rtabmap_odom, rtabmap_slam(rtabmap).
             'Grid/RangeMin': '0.0',  # Ignore points closer than this distance, mainly involving node rtabmap_slam(rtabmap).
@@ -92,7 +93,7 @@ def generate_launch_description():
         # Stereo camera data
         # ('odom_rgbd_image', '/stereo_camera/rgbd_image'),
         # ('global_pose', '/zed/zed_node/pose_with_covariance'),
-        # ('imu', '/zed/zed_node/imu/data'),
+        ('imu', '/zed/zed_node/imu/data'),
         # ('odom', '/vo/odom'), # Internal odometry topic from stereo_odometry node
         ('odom', '/zed/zed_node/odom'), # External odometry topic
         # ('rgbd_image', '/stereo_camera/rgbd_image'), # From internal stereo sync node
