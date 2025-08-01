@@ -303,7 +303,6 @@ def generate_launch_description():
             parameters=[parameters, {
                 'Mem/IncrementalMemory': 'False',
                 'Mem/InitWMWithAllNodes': 'True',
-                'Rtabmap/DetectionRate': '10.0',  # Frequency of publishing the topic /localization_pose
             }],
             remappings=remappings
         ),
