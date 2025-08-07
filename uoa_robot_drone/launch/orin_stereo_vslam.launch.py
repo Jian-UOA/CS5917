@@ -30,6 +30,7 @@ from launch.substitutions import LaunchConfiguration, PathJoinSubstitution
 from launch_ros.actions import Node
 from ament_index_python.packages import get_package_share_directory
 from launch.actions import TimerAction
+from launch.actions import OpaqueFunction
 
 def generate_launch_description():
     # Launch arguments
@@ -39,6 +40,37 @@ def generate_launch_description():
     rviz           = LaunchConfiguration('rviz')
     rviz_cfg       = LaunchConfiguration('rviz_cfg')
     # camera_model   = LaunchConfiguration('camera_model')
+
+    def set_dynamic_detection_rate(context):
+        # Copy original parameters dictionary
+        params = dict(parameters)
+        
+        # Get localization parameter value
+        loc = context.launch_configurations['localization'].lower()
+    
+        if loc == 'true':
+            params['Rtabmap/DetectionRate'] = '5.0'
+        else:
+            params['Rtabmap/DetectionRate'] = '15.0'
+        # 返回两个Node（SLAM和localization模式）
+        nodes = []
+        nodes.append(Node(
+            condition=UnlessCondition(localization),
+            package='rtabmap_slam', executable='rtabmap', output='screen',
+            parameters=[params],
+            remappings=remappings,
+            arguments=['-d']
+        ))
+        nodes.append(Node(
+            condition=IfCondition(localization),
+            package='rtabmap_slam', executable='rtabmap', output='screen',
+            parameters=[params, {
+                'Mem/IncrementalMemory': 'False',
+                'Mem/InitWMWithAllNodes': 'True',
+            }],
+            remappings=remappings
+        ))
+        return nodes
 
     # RTAB-Map parameters
     parameters={
@@ -64,8 +96,8 @@ def generate_launch_description():
             'approx_sync': False,  # (bool, default: "false") Use approximate time synchronization of input messages. If false, note that the odometry input must have also exactly the same timestamps than the input images. Enable approximate sync for stereo images, involving nodes (rtabmap_sync, rtabmap_odom, rtabmap_slam(rtabmap))
             'odom_sensor_sync': False,  # (bool, default: "false") Adjust image and scan poses relatively to odometry pose for each node added to graph. For example, if an image received at t=1s has been synchronized with a scan at t=1.1s (and our reference stamp is the scan) and the robot is moving forward at 1 m/s, then we will ask TF to know the motion between t=1s and t=1.1s (which would be 0.1 m) for the camera to adjust its local transform (-10 cm) relative to scan frame at scan stamp. This also applies to multi-camera synchronization.
             'gen_depth_fill_holes_size': 5,  # (int, default: 0) Fill holes of empty pixels up to this size. Values are interpolated from neighbor depth values. 0 means disabled.
-            # 'gen_depth_fill_iterations': 0.1,  # (double, default: 0.1) Number of iterations to fill holes.
-            # 'gen_depth_fill_holes_error': 1,  # (int, default: 1) Maximum depth error (m) to interpolate.
+            # 'gen_depth_fill_iterations': 1,  # (int, default: 1) Number of iterations to fill holes.
+            # 'gen_depth_fill_holes_error': 0.1,  # (double, default: 0.1) Maximum depth error (m) to interpolate.
             # 'map_filter_radius': 0.0,  # (double, default: 0.0) Mapping Filter nodes before creating the maps. Only load data for one node in the filter radius (the latest data is used) up to filter angle (map_filter_angle). Set to 0.0 to disable node filtering. Used for all published maps.
             # 'map_filter_angle': 30.0,  # (double, default: 30.0) Mapping Angle used when filtering nodes before creating the maps. See also map_filter_radius. Used for all published maps.
             # 'latch': "true",  # (bool, default: "true") Mapping If true, the last message published on the map topics will be saved and sent to new subscribers when they connect.
@@ -75,7 +107,7 @@ def generate_launch_description():
             'Reg/strategy': '0',  # Registration strategy for loop closure, neighbor link refining, proximity detection, involving node rtabmap_slam(rtabmap). 0: Visual, 1: ICP, 2: Visual + ICP
             'Rtabmap/TimeThr': '2000', # Maximum time (in milliseconds) that RTAB-Map is allowed to spend on processing each frame, mainly involving node rtabmap_slam. Type value: 700
             'Rtabmap/MemoryThr': '2000', # The threshold for the number of nodes retained in the working memory. When the number of nodes in the working memory exceeds this value, RTAB-Map will transfer older nodes to the long-term memory and may extract local representative nodes from it for subsequent loop closure detection, thereby optimizing memory usage, mainly involving node rtabmap_slam.
-            'Rtabmap/DetectionRate': '10.0', 
+            'Rtabmap/DetectionRate': '8.0', 
             'map_negative_poses_ignored': True, # Ignore negative poses in the map, mainly involving node rtabmap_slam(rtabmap)
             'qos_image': 1, # Quality of Service, 1：sensor_data（best_effort(no retransmission when missing packages) + volatile(the history is not retained when the node restarting) + keep_last 10(only cache the latest 10 messages)）2：default（reliable(the missing packages will be retransmitted) + volatile + keep_last 10）, mainly involving nodes rtabmap_sync, rtabmap_odom, rtabmap_slam(rtabmap).
             'Grid/RangeMin': '0.0',  # Ignore points closer than this distance, mainly involving node rtabmap_slam(rtabmap).
@@ -83,9 +115,9 @@ def generate_launch_description():
             'Reg/Force3DoF': 'true',  # Force 3 DoF registration, mainly involving node rtabmap_slam(rtabmap).
             # RTAB-Map's internal parameters should be strings
             'OdomF2M/MaxSize': '5000', # Maximum size of the OdomF2M buffer, mainly involving node rtabmap_odom.
-            'Vis/MinInliers': '10',  # Minimum number of inliers for visual matching between two images, the current image and the previous one, mainly involving nodes rtabmap_odom and rtabmap_slam(rtabmap).
-            'GFTT/MinDistance': '10', # Minimum distance between keypoints detected by GFTT (Good Features to Track), mainly involving nodes rtabmap_odom and rtabmap_slam(rtabmap).
-            'GFTT/QualityLevel': '0.001', # Quality level for GFTT keypoint detection, the higher the value, the fewer keypoints will be detected, mainly involving nodes rtabmap_odom and rtabmap_slam(rtabmap).
+            'Vis/MinInliers': '10',  # (int, default: 20) Minimum number of inliers for visual matching between two images, the current image and the previous one, mainly involving nodes rtabmap_odom and rtabmap_slam(rtabmap).
+            'GFTT/MinDistance': '10', # (double, default: 10) Minimum distance between keypoints detected by GFTT (Good Features to Track), mainly involving nodes rtabmap_odom and rtabmap_slam(rtabmap).
+            'GFTT/QualityLevel': '0.001', # (double, default: 0.001) Quality level for GFTT keypoint detection, the higher the value, the fewer keypoints will be detected, mainly involving nodes rtabmap_odom and rtabmap_slam(rtabmap).
             #'Kp/DetectorStrategy': '6', # Uncommment to match ros1 noetic results, but opencv should be built with xfeatures2d
             #'Vis/FeatureType': '6'      # Uncommment to match ros1 noetic results, but opencv should be built with xfeatures2d
     }
@@ -102,6 +134,7 @@ def generate_launch_description():
         ('right/image_rect', '/uoa/orin/right/image_rect_bgr'),
         ('left/camera_info', '/zed/zed_node/left/camera_info'), 
         ('right/camera_info', '/zed/zed_node/right/camera_info'),
+        ('map', '/rtabmap/map'),
         # ('delivery_signal', '/uoa/delivery_signal') 
     ]
     
@@ -287,26 +320,8 @@ def generate_launch_description():
             remappings=remappings
         ),
 
-        # 13) SLAM node
-        Node(
-            condition=UnlessCondition(localization),
-            package='rtabmap_slam', executable='rtabmap', output='screen',
-            parameters=[parameters],
-            remappings=remappings,
-            arguments=['-d'] # Equivalent to command line: rtabmap -d, it will delete the previous database (~/.ros/rtabmap.db)
-        ),
-
-        # 14) Localization-only mode
-        Node(
-            condition=IfCondition(localization),
-            package='rtabmap_slam', executable='rtabmap', output='screen',
-            parameters=[parameters, {
-                'Mem/IncrementalMemory': 'False',
-                'Mem/InitWMWithAllNodes': 'True',
-                'Rtabmap/DetectionRate': '10.0',  # Frequency of publishing the topic /localization_pose
-            }],
-            remappings=remappings
-        ),
+        # 13/14) 动态设置DetectionRate的SLAM/Localization Node
+        OpaqueFunction(function=set_dynamic_detection_rate),
 
         # 15) Listen to robot position and publish delivery signal
     #     Node(
