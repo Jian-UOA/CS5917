@@ -6,8 +6,7 @@ from ament_index_python.packages import get_package_share_directory
 import os
 
 map_path = os.path.join(get_package_share_directory('uoa_robot_drone'), 'maps', 'uoa_robot_drone_vslam_202508051615.yaml')
-param_file_path = os.path.join(get_package_share_directory('uoa_robot_drone'), 'config', 'nav2_controller_params.yaml')
-print(f"Controller parameters file path: {param_file_path}")
+param_file_path = os.path.join(get_package_share_directory('uoa_robot_drone'), 'config', 'nav2_params.yaml')
 
 robot_base_frame = {'robot_base_frame': 'zed_camera_link'}
 remappings = [
@@ -87,8 +86,7 @@ def generate_launch_description():
             package='nav2_planner',
             executable='planner_server',
             output='screen',
-            parameters=[{'use_sim_time': LaunchConfiguration('use_sim_time')},
-                        robot_base_frame],
+            parameters=[param_file_path],
             remappings=remappings
         ),
         Node(

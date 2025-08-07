@@ -28,6 +28,8 @@ class AutoDelivery(Node):
         # Additional parameters for voice control
         self.declare_parameter('prepare_takeoff_text', "Received delivery order. Aberdeen No. 1 delivery drone will take off in 5 seconds to deliver the package. Please stay safe!")
         self.declare_parameter('customer_greeting_text', "Dear customer, Aberdeen No. 1 is delivering your express and then I will land for you to pick up the package. Please stay safe!")
+        self.declare_parameter('customer_request_land_text', "Dear customer, Aberdeen No. 1 is delivering your express. Could you please give me the operation command to land? You can say 'land' to land the drone or 'up', 'down', 'left', 'right', 'forward', or 'back' followed by a distance in centimeters to move the drone.")
+
         self.declare_parameter('prepare_return_text', "The package has been delivered. Aberdeen No. 1 will take off and return in 5 seconds. Please stay safe!")
         self.declare_parameter('customer_goodbye_text', "Dear customer, thank you for using Aberdeen No. 1 delivery service. Have a wonderful day! Goodbye!")
         self.declare_parameter('seeking_base_vehicle_text', "Aberdeen number one express drone is seeking the base vehicle.")
@@ -43,6 +45,7 @@ class AutoDelivery(Node):
         self.get_logger().info(f'delivery_ready: {self.delivery_ready}')
         self.prepare_takeoff_text = self.get_parameter('prepare_takeoff_text').get_parameter_value().string_value
         self.customer_greeting_text = self.get_parameter('customer_greeting_text').get_parameter_value().string_value
+        self.customer_request_land_text = self.get_parameter('customer_request_land_text').get_parameter_value().string_value
         self.prepare_return_text = self.get_parameter('prepare_return_text').get_parameter_value().string_value
         self.customer_goodbye_text = self.get_parameter('customer_goodbye_text').get_parameter_value().string_value
         self.seeking_base_vehicle_text = self.get_parameter('seeking_base_vehicle_text').get_parameter_value().string_value
@@ -163,80 +166,80 @@ class AutoDelivery(Node):
                 
                 self.tello.rotate_clockwise(180)
 
-                self.get_logger().debug(self.customer_greeting_text)
-                asyncio.run(speak(self.customer_greeting_text))
+                self.get_logger().debug(self.customer_request_land_text)
+                asyncio.run(speak(self.customer_request_land_text))
+                listen_for_land_command(on_land_callback=self.voice_control_callback)
 
-                
 
-                self.tello.land()
-                time.sleep(5)
-                self.get_logger().info('Delivery completed.')
-                self.delivery_ready = False
-                self.current_delivery_signal.data = False
-                self.get_logger().debug(f'delivery_ready set to {self.delivery_ready}, waiting for reset...')
+                # self.tello.land()
+                # time.sleep(5)
+                # self.get_logger().info('Delivery completed.')
+                # self.delivery_ready = False
+                # self.current_delivery_signal.data = False
+                # self.get_logger().debug(f'delivery_ready set to {self.delivery_ready}, waiting for reset...')
                 
-                # time.sleep(2)
-                self.get_logger().debug(self.prepare_return_text)
-                asyncio.run(speak(self.prepare_return_text))
+                # # time.sleep(2)
+                # self.get_logger().debug(self.prepare_return_text)
+                # asyncio.run(speak(self.prepare_return_text))
                 
-                # time.sleep(2)
-                asyncio.run(speak("5"))
-                asyncio.run(speak("4"))
-                asyncio.run(speak("3"))
-                asyncio.run(speak("2"))
-                asyncio.run(speak("1"))
-                asyncio.run(speak("Takeoff!"))
+                # # time.sleep(2)
+                # asyncio.run(speak("5"))
+                # asyncio.run(speak("4"))
+                # asyncio.run(speak("3"))
+                # asyncio.run(speak("2"))
+                # asyncio.run(speak("1"))
+                # asyncio.run(speak("Takeoff!"))
 
-                self.tello.enable_mission_pads()
-                self.tello.set_mission_pad_detection_direction(2)
-                self.tello.takeoff()
+                # self.tello.enable_mission_pads()
+                # self.tello.set_mission_pad_detection_direction(2)
+                # self.tello.takeoff()
 
-                mid_from = self.tello.get_state_field('mid')
-                self.get_logger().info(f"Detected MID: {mid_from} at customer's location")
+                # mid_from = self.tello.get_state_field('mid')
+                # self.get_logger().info(f"Detected MID: {mid_from} at customer's location")
                 
-                self.get_logger().debug(self.customer_goodbye_text)
-                asyncio.run(speak(self.customer_goodbye_text))
+                # self.get_logger().debug(self.customer_goodbye_text)
+                # asyncio.run(speak(self.customer_goodbye_text))
                 
-                # if mid_from < 1:
+                # # if mid_from < 1:
+                # #     mid_from = self.tello.get_state_field('mid')
+                # #     self.get_logger().info(f"Second time detected MID: {mid_from} at customer's location")
+                
+                # if mid_from >= 1:
+                #     self.get_logger().info('Starting return to base vehicle...')
+                #     cmd = f'go 0 0 110 20 m{mid_from}' # go x y z speed mid
+                #     while not self.tello.send_control_command(cmd):
+                #         time.sleep(8)
+                #         self.tello.send_control_command(cmd)
+                #         break
+                #     self.pose_rectify()
+                # else:
+                #     self.get_logger().info('No MID detected, moving forward to search for MID...')
+                #     while not self.tello.send_control_command(f'forward {forward_distance}'):
+                #         time.sleep(8)
+                #         self.tello.send_control_command(f'forward {forward_distance}')
+                #     self.tello.enable_mission_pads()
+                #     self.tello.set_mission_pad_detection_direction(2)
+                #     self.tello.move_down(100)
+                #     time.sleep(3)
                 #     mid_from = self.tello.get_state_field('mid')
-                #     self.get_logger().info(f"Second time detected MID: {mid_from} at customer's location")
-                
-                if mid_from >= 1:
-                    self.get_logger().info('Starting return to base vehicle...')
-                    cmd = f'go 0 0 110 20 m{mid_from}' # go x y z speed mid
-                    while not self.tello.send_control_command(cmd):
-                        time.sleep(8)
-                        self.tello.send_control_command(cmd)
-                        break
-                    self.pose_rectify()
-                else:
-                    self.get_logger().info('No MID detected, moving forward to search for MID...')
-                    while not self.tello.send_control_command(f'forward {forward_distance}'):
-                        time.sleep(8)
-                        self.tello.send_control_command(f'forward {forward_distance}')
-                    self.tello.enable_mission_pads()
-                    self.tello.set_mission_pad_detection_direction(2)
-                    self.tello.move_down(100)
-                    time.sleep(3)
-                    mid_from = self.tello.get_state_field('mid')
-                    self.get_logger().info(f"Detected MID: {mid_from} after moving forward")
-                    if mid_from < 1:
-                        self.get_logger().info('No MID detected, rotating to search for MID...')
-                        while mid_from < 1:
-                            asyncio.run(speak(self.seeking_base_vehicle_text))
-                            self.tello.rotate_clockwise(15)
-                            time.sleep(0.5)
-                            yaw = self.tello.get_yaw()
-                            mid_from = self.tello.get_state_field('mid')
-                            self.get_logger().info(f"Detected MID: {mid_from} at yaw {yaw}")
-                            if mid_from >= 1:
-                                self.get_logger().info(f'Detected Base Vehicle ID: {mid_from}. Preparing for landing.')
-                                asyncio.run(speak(f"Detected Base Vehicle ID: {mid_from}."))
-                                break
-                        self.pose_rectify()
-                self.get_logger().debug(self.land_ready_text)
-                asyncio.run(speak(self.land_ready_text))
-                listen_for_land_command(on_land_callback=self.voice_control_callback)     
+                #     self.get_logger().info(f"Detected MID: {mid_from} after moving forward")
+                #     if mid_from < 1:
+                #         self.get_logger().info('No MID detected, rotating to search for MID...')
+                #         while mid_from < 1:
+                #             asyncio.run(speak(self.seeking_base_vehicle_text))
+                #             self.tello.rotate_clockwise(15)
+                #             time.sleep(0.5)
+                #             yaw = self.tello.get_yaw()
+                #             mid_from = self.tello.get_state_field('mid')
+                #             self.get_logger().info(f"Detected MID: {mid_from} at yaw {yaw}")
+                #             if mid_from >= 1:
+                #                 self.get_logger().info(f'Detected Base Vehicle ID: {mid_from}. Preparing for landing.')
+                #                 asyncio.run(speak(f"Detected Base Vehicle ID: {mid_from}."))
+                #                 break
+                #         self.pose_rectify()
+                # self.get_logger().debug(self.land_ready_text)
+                # asyncio.run(speak(self.land_ready_text))
+                # listen_for_land_command(on_land_callback=self.voice_control_callback)     
         except Exception as e:
             self.get_logger().error(f'Error during delivery: {e}')
             self.delivery_ready = False
