@@ -23,7 +23,7 @@ class AutoDelivery(Node):
     def __init__(self):
         super().__init__('auto_delivery')
         # Declare parameters
-        self.declare_parameter('tello_ip', '192.168.183.21')
+        self.declare_parameter('tello_ip', '192.168.87.21')
         self.declare_parameter('delivery_ready', False)
         # Additional parameters for voice control
         self.declare_parameter('prepare_takeoff_text', "Received delivery order. Aberdeen No. 1 delivery drone will take off in 5 seconds to deliver the package. Please stay safe!")
@@ -50,6 +50,7 @@ class AutoDelivery(Node):
         self.land_command_text = self.get_parameter('land_command_text').get_parameter_value().string_value
         self.land_starting_text = self.get_parameter('land_starting_text').get_parameter_value().string_value
         self.land_complete_text = self.get_parameter('land_complete_text').get_parameter_value().string_value
+
 
         # Set the logging level of this node to DEBUG for development and debugging purposes
         # This should be set to INFO or WARN in production
@@ -102,12 +103,14 @@ class AutoDelivery(Node):
 
     def keep_alive(self):
         """Send a keepalive packet to prevent the drone from landing after 15 seconds."""
+        
+        if not self.delivery_ready:
+            self.get_logger().info('Delivery not ready, waiting for reset...')
+            return
+
         try:
             battery = self.tello.get_battery()
             self.get_logger().info(f'[keep_alive] The battery level is {battery}%')
-
-            if not self.delivery_ready:
-                self.get_logger().info('Delivery not ready, waiting for reset...')
 
             if not self.current_delivery_signal.data:
                 self.get_logger().info('[keep_alive] Waiting for delivery order...')
@@ -137,7 +140,7 @@ class AutoDelivery(Node):
             if msg.data:
                 # self.get_logger().info('Starting delivery...')
                 self.get_logger().debug(self.prepare_takeoff_text)
-                asyncio.run(speak(self.get_parameter('prepare_takeoff_text').get_parameter_value().string_value))
+                asyncio.run(speak(self.prepare_takeoff_text))
                 asyncio.run(speak("5"))
                 asyncio.run(speak("4"))
                 asyncio.run(speak("3"))
@@ -152,15 +155,19 @@ class AutoDelivery(Node):
                 mid_from = self.tello.get_state_field('mid')
                 self.get_logger().info(f"Detected MID: {mid_from}")
 
-                self.tello.move_up(25)
+                self.tello.move_up(110)
                 time.sleep(2)
-                self.tello.move_forward(80)
+                forward_distance = 230
+                self.tello.move_forward(forward_distance)
                 time.sleep(5)
                 
                 self.tello.rotate_clockwise(180)
 
                 self.get_logger().debug(self.customer_greeting_text)
                 asyncio.run(speak(self.customer_greeting_text))
+
+                
+
                 self.tello.land()
                 time.sleep(5)
                 self.get_logger().info('Delivery completed.')
@@ -196,7 +203,7 @@ class AutoDelivery(Node):
                 
                 if mid_from >= 1:
                     self.get_logger().info('Starting return to base vehicle...')
-                    cmd = f'go 0 0 110 20 m{mid_from}'
+                    cmd = f'go 0 0 110 20 m{mid_from}' # go x y z speed mid
                     while not self.tello.send_control_command(cmd):
                         time.sleep(8)
                         self.tello.send_control_command(cmd)
@@ -204,12 +211,13 @@ class AutoDelivery(Node):
                     self.pose_rectify()
                 else:
                     self.get_logger().info('No MID detected, moving forward to search for MID...')
-                    while not self.tello.send_control_command('forward 80'):
+                    while not self.tello.send_control_command(f'forward {forward_distance}'):
                         time.sleep(8)
-                        self.tello.send_control_command('forward 80')
+                        self.tello.send_control_command(f'forward {forward_distance}')
                     self.tello.enable_mission_pads()
                     self.tello.set_mission_pad_detection_direction(2)
-                    time.sleep(5)
+                    self.tello.move_down(100)
+                    time.sleep(3)
                     mid_from = self.tello.get_state_field('mid')
                     self.get_logger().info(f"Detected MID: {mid_from} after moving forward")
                     if mid_from < 1:
@@ -223,6 +231,7 @@ class AutoDelivery(Node):
                             self.get_logger().info(f"Detected MID: {mid_from} at yaw {yaw}")
                             if mid_from >= 1:
                                 self.get_logger().info(f'Detected Base Vehicle ID: {mid_from}. Preparing for landing.')
+                                asyncio.run(speak(f"Detected Base Vehicle ID: {mid_from}."))
                                 break
                         self.pose_rectify()
                 self.get_logger().debug(self.land_ready_text)
@@ -230,6 +239,9 @@ class AutoDelivery(Node):
                 listen_for_land_command(on_land_callback=self.voice_control_callback)     
         except Exception as e:
             self.get_logger().error(f'Error during delivery: {e}')
+            self.delivery_ready = False
+            self.current_delivery_signal.data = False
+            self.get_logger().debug(f'delivery_ready set to {self.delivery_ready}, waiting for reset...')
 
     def pose_rectify(self):
         """
@@ -263,7 +275,7 @@ class AutoDelivery(Node):
                 asyncio.run(speak(self.land_complete_text))
                 return True  # Indicate that the land command was executed
             elif value < 20 or value > 500:
-                asyncio.run(speak("Sorry, the unit is centimeters and the value must be greater than 20 and less than 500."))
+                asyncio.run(speak("Sorry, the moving distance must be greater than 20 and less than 500 centimeters."))
                 return False  # Indicate that the command was not executed
             else:
                 while not self.tello.send_control_command(f'{direction} {value}'):

@@ -6,6 +6,12 @@ from launch.conditions import IfCondition
 
 def generate_launch_description():
 
+    subscribe_goal_pose = DeclareLaunchArgument(
+        'subscribe_goal_pose',
+        default_value='true',
+        description='Enable or disable subscription to /goal_pose topic'
+    )
+
     # Declare the delivery_ready argument
     declare_delivery_ready_arg = DeclareLaunchArgument(
             'delivery_ready',
@@ -19,6 +25,7 @@ def generate_launch_description():
     )
 
     return LaunchDescription([
+        subscribe_goal_pose,
         declare_delivery_ready_arg,
         localization,
         Node(
@@ -28,13 +35,16 @@ def generate_launch_description():
             name='robot_position_listener',
             # Use parameters to set goal position and orientation
             parameters=[{
-                'goal_position_x': 0.66,
-                'goal_position_y': 0.78,
+                'subscribe_goal_pose': LaunchConfiguration('subscribe_goal_pose'),
+                'localization': LaunchConfiguration('localization'),
+                'delivery_signal/rate': 1.0,  # Default rate for publishing delivery signal
+                'goal_position_x': 0.158171,
+                'goal_position_y': 1.83296,
                 'goal_position_z': 0.0,
                 'goal_orientation_x': 0.0,
                 'goal_orientation_y': 0.0,
-                'goal_orientation_z': 0.58,  
-                'goal_orientation_w': 0.80,
+                'goal_orientation_z': -0.999993,  
+                'goal_orientation_w': 0.00377529,
                 'distance_threshold': 0.1,
                 'orientation_threshold': 0.1
             }]

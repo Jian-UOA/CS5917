@@ -19,17 +19,22 @@ Usage:
 
 import rclpy
 from rclpy.node import Node
+import geometry_msgs.msg
 from geometry_msgs.msg import PoseWithCovarianceStamped
 from std_msgs.msg import Bool
 import math
 from uoa_robot_interfaces.srv import SetRobotGoalPose  # Import the service definition
+import time
 
 class RobotPositionListener(Node):
     def __init__(self):
         super().__init__('robot_position_listener')
         self.get_logger().info('Robot Position Listener Node is starting...')
-        
+        self.get_logger().set_level(rclpy.logging.LoggingSeverity.DEBUG)
         # Declare parameters with default values
+        self.declare_parameter('delivery_signal/rate', 1.0)  # Rate at which to publish the delivery signal
+        self.declare_parameter('subscribe_goal_pose', True)
+        self.declare_parameter('localization', False)
         self.declare_parameter('goal_position_x', 1.2)
         self.declare_parameter('goal_position_y', 1.4)
         self.declare_parameter('goal_position_z', 0.0)
@@ -41,6 +46,9 @@ class RobotPositionListener(Node):
         self.declare_parameter('orientation_threshold', 0.1)
 
         # Get parameters
+        self.delivery_signal_rate = self.get_parameter('delivery_signal/rate').value
+        self.subscribe_goal_pose = self.get_parameter('subscribe_goal_pose').value
+        self.localization = self.get_parameter('localization').value
         self.goal_position_x = self.get_parameter('goal_position_x').value
         self.goal_position_y = self.get_parameter('goal_position_y').value
         self.goal_position_z = self.get_parameter('goal_position_z').value
@@ -65,6 +73,27 @@ class RobotPositionListener(Node):
         
         self.srv = self.create_service(SetRobotGoalPose, 'set_robot_goal_pose', self.set_robot_goal_pose_callback)
 
+        if self.subscribe_goal_pose:
+            self.subscribe_goal_pose_topic = self.create_subscription(
+                geometry_msgs.msg.PoseStamped, '/goal_pose', self.goal_pose_callback, 10)
+            self.get_logger().info('Subscribed to /goal_pose topic.')
+
+        self.successive_count = 0
+
+    def goal_pose_callback(self, msg):
+        # Update the goal position and orientation from the received message
+        self.goal_position_x = msg.pose.position.x
+        self.goal_position_y = msg.pose.position.y
+        self.goal_position_z = msg.pose.position.z
+        self.goal_orientation_x = msg.pose.orientation.x
+        self.goal_orientation_y = msg.pose.orientation.y
+        self.goal_orientation_z = msg.pose.orientation.z
+        self.goal_orientation_w = msg.pose.orientation.w
+
+        # Log the updated goal pose
+        self.get_logger().info(f'Updated Goal Position: ({self.goal_position_x}, {self.goal_position_y}, {self.goal_position_z})')
+        self.get_logger().info(f'Updated Goal Orientation: ({self.goal_orientation_x}, {self.goal_orientation_y}, {self.goal_orientation_z}, {self.goal_orientation_w})')
+
     def set_robot_goal_pose_callback(self, request, response):
         # Update the goal position and orientation based on the service request
         self.goal_position_x = request.position_x
@@ -80,6 +109,19 @@ class RobotPositionListener(Node):
         response.message = 'Goal pose updated successfully'
         return response
 
+    def quaternion_angle_difference(self, q1, q2):
+        
+        # compute the dot product of the two quaternions
+        dot_product = abs(q1.x * q2.x + q1.y * q2.y + q1.z * q2.z + q1.w * q2.w)
+        
+        # limit the range to [0, 1] to avoid numerical errors
+        dot_product = min(1.0, max(0.0, dot_product))
+
+        # calculate the angle difference
+        angle_difference = 2.0 * math.acos(dot_product)
+        
+        return angle_difference
+
     def pose_callback(self, msg):
         # Extract the robot's current position and orientation
         current_position = msg.pose.pose.position
@@ -92,30 +134,44 @@ class RobotPositionListener(Node):
             (current_position.z - self.goal_position_z) ** 2
         )
 
+        # Create a quaternion for the goal orientation
+        goal_orientation = geometry_msgs.msg.Quaternion(
+            x=self.goal_orientation_x,
+            y=self.goal_orientation_y,
+            z=self.goal_orientation_z,
+            w=self.goal_orientation_w
+        )
+
         # Calculate the orientation difference
-        orientation_difference = math.sqrt(
-            (current_orientation.x - self.goal_orientation_x) ** 2 +
-            (current_orientation.y - self.goal_orientation_y) ** 2 +
-            (current_orientation.z - self.goal_orientation_z) ** 2 +
-            (current_orientation.w - self.goal_orientation_w) ** 2
+        orientation_difference = self.quaternion_angle_difference(
+            current_orientation, 
+            goal_orientation
         )
 
         # Log the current position, orientation, and distance to goal
-        self.get_logger().debug(f'Current Position: ({current_position.x}, {current_position.y}, {current_position.z})')
-        self.get_logger().debug(f'Current Orientation: ({current_orientation.x}, {current_orientation.y}, {current_orientation.z}, {current_orientation.w})')
-        self.get_logger().debug(f'Distance to Goal: {distance_to_goal}')
-        self.get_logger().debug(f'Orientation Difference: {orientation_difference}')
+        if not self.delivery_signal.data and self.localization:
+            self.get_logger().debug(f'Current Position: ({current_position.x}, {current_position.y}, {current_position.z})')
+            self.get_logger().debug(f'   Goal Position: ({self.goal_position_x}, {self.goal_position_y}, {self.goal_position_z})')
+            self.get_logger().debug(f'Current Orientation: ({current_orientation.x}, {current_orientation.y}, {current_orientation.z}, {current_orientation.w})')
+            self.get_logger().debug(f'   Goal Orientation: ({self.goal_orientation_x}, {self.goal_orientation_y}, {self.goal_orientation_z}, {self.goal_orientation_w})')
+            self.get_logger().debug(f'Distance to Goal: {distance_to_goal}')
+            self.get_logger().debug(f'Orientation Difference: {orientation_difference}')
 
         # Check if the robot is close enough to the goal position and orientation
         if distance_to_goal < self.distance_threshold and orientation_difference < self.orientation_threshold:
+            self.successive_count += 1
             self.get_logger().debug('Robot is at the goal position and orientation.')
-            self.delivery_signal.data = True
+            if self.successive_count >= 3:
+                self.delivery_signal.data = True
         else:
             self.get_logger().debug('Robot is not at the goal position and orientation.')
             self.delivery_signal.data = False
+            self.successive_count = 0
 
         # Publish the delivery signal
-        self.delivery_signal_publisher.publish(self.delivery_signal)                                                           
+        self.delivery_signal_publisher.publish(self.delivery_signal)
+        time.sleep(1.0 / self.delivery_signal_rate)
+        
 
 def main(args=None):
     rclpy.init(args=args)
