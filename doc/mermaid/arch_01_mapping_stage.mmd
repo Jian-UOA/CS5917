@@ -1,0 +1,63 @@
+%% High contrast init
+%%{init: {
+  "theme":"base",
+  "themeVariables":{
+    "fontFamily":"Arial,Helvetica,sans-serif",
+    "primaryColor":"#FFFFFF",
+    "primaryTextColor":"#000000",
+    "primaryBorderColor":"#000000",
+    "secondaryColor":"#FFFFFF",
+    "secondaryTextColor":"#000000",
+    "tertiaryColor":"#FFFFFF",
+    "tertiaryTextColor":"#000000",
+    "lineColor":"#000000"
+  }
+}}%%
+graph TB
+    subgraph "建图阶段 - Mapping Mode"
+        subgraph "数据输入"
+            ZED[ZED相机]
+            LeftImg[左相机图像<br/>/uoa/orin/left/image_rect_bgr]
+            RightImg[右相机图像<br/>/uoa/orin/right/image_rect_bgr]
+            CameraInfo[相机参数<br/>/zed/.../left/right/camera_info]
+        end
+        subgraph "数据处理"
+            StereoSync[stereo_sync<br/>立体同步]
+            StereoOdom[stereo_odometry<br/>视觉里程计]
+            RTABMAP[rtabmap<br/>SLAM节点]
+        end
+        subgraph "输出结果"
+            Map[地图<br/>/rtabmap/map]
+            Odom[里程计<br/>/vo/odom]
+            Database[RTAB-Map数据库<br/>rtabmap.db]
+        end
+        ZED --> LeftImg
+        ZED --> RightImg
+        ZED --> CameraInfo
+        LeftImg --> StereoSync
+        RightImg --> StereoSync
+        CameraInfo --> StereoSync
+        StereoSync --> StereoOdom
+        StereoSync --> RTABMAP
+        StereoOdom --> RTABMAP
+        RTABMAP --> Map
+        StereoOdom --> Odom
+        RTABMAP --> Database
+    end
+    subgraph "建图参数"
+        DetectionRate["DetectionRate: 15.0<br/>(高检测率)"]
+        MemoryMode["IncrementalMemory: True<br/>(增量模式)"]
+    end
+    DetectionRate -.-> RTABMAP
+    MemoryMode -.-> RTABMAP
+
+    %% High contrast styles
+    classDef inputClass fill:#0D47A1,stroke:#000000,stroke-width:2px,color:#FFFFFF
+    classDef processClass fill:#1B5E20,stroke:#000000,stroke-width:2px,color:#FFFFFF
+    classDef outputClass fill:#4A148C,stroke:#000000,stroke-width:2px,color:#FFFFFF
+    classDef paramClass fill:#E65100,stroke:#000000,stroke-width:2px,color:#FFFFFF
+
+    class ZED,LeftImg,RightImg,CameraInfo inputClass
+    class StereoSync,StereoOdom,RTABMAP processClass
+    class Map,Odom,Database outputClass
+    class DetectionRate,MemoryMode paramClass

@@ -160,7 +160,8 @@ class RobotPositionListener(Node):
         # Check if the robot is close enough to the goal position and orientation
         if distance_to_goal < self.distance_threshold and orientation_difference < self.orientation_threshold:
             self.successive_count += 1
-            self.get_logger().debug('Robot is at the goal position and orientation.')
+            if self.successive_count <= 3:
+                self.get_logger().debug('Robot is at the goal position and orientation.')
             if self.successive_count >= 3:
                 self.delivery_signal.data = True
         else:

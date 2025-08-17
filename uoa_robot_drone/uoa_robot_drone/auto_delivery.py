@@ -23,13 +23,13 @@ class AutoDelivery(Node):
     def __init__(self):
         super().__init__('auto_delivery')
         # Declare parameters
-        self.declare_parameter('tello_ip', '192.168.87.21')
+        self.declare_parameter('tello_ip', '192.168.195.21')
         self.declare_parameter('delivery_ready', False)
         # Additional parameters for voice control
         self.declare_parameter('prepare_takeoff_text', "Received delivery order. Aberdeen No. 1 delivery drone will take off in 5 seconds to deliver the package. Please stay safe!")
         self.declare_parameter('customer_greeting_text', "Dear customer, Aberdeen No. 1 is delivering your express and then I will land for you to pick up the package. Please stay safe!")
-        self.declare_parameter('customer_request_land_text', "Dear customer, Aberdeen No. 1 is delivering your express. Could you please give me the operation command to land? You can say 'land' to land the drone or 'up', 'down', 'left', 'right', 'forward', or 'back' followed by a distance in centimeters to move the drone.")
-
+        self.declare_parameter('customer_request_land_text', "Dear customer, Aberdeen No. 1 is delivering your express. Could you please give me the operation command to land? ")
+        self.declare_parameter('operation_command_text', "You can say 'land' to land the drone or 'up', 'down', 'left', 'right', 'forward', or 'back' followed by a distance in centimeters to move the drone.")
         self.declare_parameter('prepare_return_text', "The package has been delivered. Aberdeen No. 1 will take off and return in 5 seconds. Please stay safe!")
         self.declare_parameter('customer_goodbye_text', "Dear customer, thank you for using Aberdeen No. 1 delivery service. Have a wonderful day! Goodbye!")
         self.declare_parameter('seeking_base_vehicle_text', "Aberdeen number one express drone is seeking the base vehicle.")
@@ -46,6 +46,7 @@ class AutoDelivery(Node):
         self.prepare_takeoff_text = self.get_parameter('prepare_takeoff_text').get_parameter_value().string_value
         self.customer_greeting_text = self.get_parameter('customer_greeting_text').get_parameter_value().string_value
         self.customer_request_land_text = self.get_parameter('customer_request_land_text').get_parameter_value().string_value
+        self.operation_command_text = self.get_parameter('operation_command_text').get_parameter_value().string_value
         self.prepare_return_text = self.get_parameter('prepare_return_text').get_parameter_value().string_value
         self.customer_goodbye_text = self.get_parameter('customer_goodbye_text').get_parameter_value().string_value
         self.seeking_base_vehicle_text = self.get_parameter('seeking_base_vehicle_text').get_parameter_value().string_value
@@ -144,30 +145,47 @@ class AutoDelivery(Node):
                 # self.get_logger().info('Starting delivery...')
                 self.get_logger().debug(self.prepare_takeoff_text)
                 asyncio.run(speak(self.prepare_takeoff_text))
+                self.get_logger().debug('5')
                 asyncio.run(speak("5"))
+                self.tello.connect()
+                self.get_logger().debug('4')
                 asyncio.run(speak("4"))
+                self.get_logger().debug('3')
                 asyncio.run(speak("3"))
+                self.get_logger().debug('2')
                 asyncio.run(speak("2"))
+                self.get_logger().debug('1')
                 asyncio.run(speak("1"))
+                self.get_logger().debug('Takeoff!')
                 asyncio.run(speak("Takeoff!"))
-                self.tello.enable_mission_pads()
-                self.tello.set_mission_pad_detection_direction(2)
+                # self.tello.enable_mission_pads()
+                # self.tello.set_mission_pad_detection_direction(2)
                 self.tello.takeoff()
                 time.sleep(5)
                
-                mid_from = self.tello.get_state_field('mid')
-                self.get_logger().info(f"Detected MID: {mid_from}")
+                # mid_from = self.tello.get_state_field('mid')
+                # self.get_logger().info(f"Detected MID: {mid_from}")
 
-                self.tello.move_up(110)
+                self.tello.move_up(130)
                 time.sleep(2)
                 forward_distance = 230
                 self.tello.move_forward(forward_distance)
-                time.sleep(5)
+                # time.sleep(5)
                 
-                self.tello.rotate_clockwise(180)
+                # self.tello.rotate_clockwise(180)
 
                 self.get_logger().debug(self.customer_request_land_text)
                 asyncio.run(speak(self.customer_request_land_text))
+
+                # Avoid automatic landing because of waiting for too long time
+                self.tello.move_down(25)
+
+                self.get_logger().debug(self.operation_command_text)
+                asyncio.run(speak(self.operation_command_text))
+                
+                # Avoid automatic landing because of waiting for too long time
+                self.tello.move_up(25)
+
                 listen_for_land_command(on_land_callback=self.voice_control_callback)
 
 
@@ -270,33 +288,91 @@ class AutoDelivery(Node):
     def voice_control_callback(self, order_text):
         self.get_logger().info(f'Voice command received: {order_text}')
         direction, value = self.parse_order_text(order_text)
+        self.get_logger().debug(f'Parsed command: direction={direction}, value={value}')
         if direction and value:
             if direction == 'land':
+                self.get_logger().debug(f"Executing command: {direction}")
                 while not self.tello.send_control_command('land'):
                     time.sleep(8)
                     self.tello.send_control_command('land')
-                asyncio.run(speak(self.land_complete_text))
+                # asyncio.run(speak(self.land_complete_text))
                 return True  # Indicate that the land command was executed
             elif value < 20 or value > 500:
                 asyncio.run(speak("Sorry, the moving distance must be greater than 20 and less than 500 centimeters."))
                 return False  # Indicate that the command was not executed
             else:
+                self.get_logger().debug(f"Executing command: {direction} {value}")
                 while not self.tello.send_control_command(f'{direction} {value}'):
                     time.sleep(1)
                     self.tello.send_control_command(f'{direction} {value}')
                 return False  # Indicate that the command was executed but not a land command
 
     def parse_order_text(self, order_text):
-        pattern = r'^(up|down|left|right|forward|back)\s+(\d+)$'
-        match = re.match(pattern, order_text.strip(), re.IGNORECASE)
-        if match:
-            direction = match.group(1).lower()
-            value = int(match.group(2))
-            return direction, value
-        elif 'land' in order_text.lower():
-            return 'land', 0
-        else:
+        fuzzy_mappings = {
+            'right': ['write', 'rat', 'right', 'wright', 'rite'],
+            'left': ['level', 'left', 'lift', 'loft'],
+            'up': ['up', 'app'],
+            'down': ['down', 'town', 'dawn'],
+            'forward': ['forward', 'for word', 'foreword', 'forwarder', 'what are the'],
+            'back': ['back', 'bag', 'beck'],
+            'land': ['land', 'lend', 'lent', 'light', 'learned', 'lending', 'landing']
+        }
+        
+        number_fuzzy_mappings = {
+            '13': '30',
+            '14': '40',
+            '15': '50',
+            '16': '60',
+            '17': '70',
+            '18': '80',
+            '19': '90',
+        }
+        
+        self.get_logger().debug(f'Parsing order text: {order_text}')
+        order_lower = order_text.lower().strip()
+        
+        # First check for land command (because land does not require a number)
+        for keyword in fuzzy_mappings['land']:
+            if ' ' in keyword:
+                if keyword in order_lower:
+                    self.get_logger().debug(f'Multi-word land matched "{order_text}" with "{keyword}" -> land, 0')
+                    return 'land', 0
+            else:
+                pattern = r'\b' + re.escape(keyword) + r'\b'
+                if re.search(pattern, order_lower):
+                    self.get_logger().debug(f'Word boundary land matched "{order_text}" with "{keyword}" -> land, 0')
+                    return 'land', 0
+
+        # Check other commands that require a number
+        number_match = re.search(r'(\d+)', order_text)
+        if not number_match:
+            self.get_logger().debug(f'No number found and no land command matched for: {order_text}')
             return None, None
+        
+        original_value = number_match.group(1)
+        
+        if original_value in number_fuzzy_mappings:
+            corrected_value = number_fuzzy_mappings[original_value]
+            value = int(corrected_value)
+            self.get_logger().debug(f'Number fuzzy matched: "{original_value}" -> "{corrected_value}"')
+        else:
+            value = int(original_value)
+
+        # Check direction commands (excluding land)
+        for direction, keywords in fuzzy_mappings.items():
+            for keyword in keywords:
+                if ' ' in keyword:
+                    if keyword in order_lower:
+                        self.get_logger().debug(f'Multi-word matched "{order_text}" with "{keyword}" -> {direction}, {value}')
+                        return direction, value
+                else:
+                    pattern = r'\b' + re.escape(keyword) + r'\b'
+                    if re.search(pattern, order_lower):
+                        self.get_logger().debug(f'Word boundary matched "{order_text}" with "{keyword}" -> {direction}, {value}')
+                        return direction, value
+        
+        self.get_logger().debug(f'No match found for: {order_text}')
+        return None, None
 
     def on_land_callback(self):
         asyncio.run(speak(self.land_starting_text))

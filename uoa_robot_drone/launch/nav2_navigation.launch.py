@@ -48,20 +48,17 @@ def generate_launch_description():
             }],
             remappings=remappings
         ),
-        # Node(
-        #     package='nav2_amcl', # AMCL (Adaptive Monte Carlo Localization) node
-        #     executable='amcl',
-        #     output='screen',
-        #     parameters=[{'use_sim_time': LaunchConfiguration('use_sim_time')}],
-        #     arguments=['--ros-args', '--log-level', 'warn'],
-        # ),
+
         Node(
             package='nav2_behaviors',
             executable='behavior_server',
             output='screen',
-            parameters=[{'use_sim_time': LaunchConfiguration('use_sim_time')},
-                        robot_base_frame,
+            parameters=[
+                param_file_path, 
+                {'use_sim_time': LaunchConfiguration('use_sim_time')},
+                robot_base_frame,
             ],
+            arguments=['--ros-args', '--log-level', 'DEBUG'],
             remappings=remappings
         ),
         Node(
@@ -69,24 +66,35 @@ def generate_launch_description():
             executable='bt_navigator',
             output='screen',
             parameters=[
+                param_file_path,
                 {'use_sim_time': LaunchConfiguration('use_sim_time')},
                 robot_base_frame,
             ],
+            arguments=['--ros-args', '--log-level', 'DEBUG'],
             remappings=remappings,
         ),
         Node(
             package='nav2_controller',
             executable='controller_server',
             output='screen',
-            parameters=[param_file_path],
-            arguments=['--ros-args', '--log-level', 'info'],
+            parameters=[
+                param_file_path,
+                {'use_sim_time': LaunchConfiguration('use_sim_time')},
+                robot_base_frame,
+            ],
+            arguments=['--ros-args', '--log-level', 'DEBUG'],
             remappings=remappings
         ),
         Node(
             package='nav2_planner',
             executable='planner_server',
             output='screen',
-            parameters=[param_file_path],
+            parameters=[
+                param_file_path,
+                {'use_sim_time': LaunchConfiguration('use_sim_time')},
+                robot_base_frame,
+            ],
+            arguments=['--ros-args', '--log-level', 'DEBUG'],
             remappings=remappings
         ),
         Node(
@@ -94,6 +102,7 @@ def generate_launch_description():
             executable='waypoint_follower',
             output='screen',
             parameters=[{'use_sim_time': LaunchConfiguration('use_sim_time')}],
+            arguments=['--ros-args', '--log-level', 'DEBUG'],
             remappings=remappings
         ),
         Node(
@@ -105,7 +114,6 @@ def generate_launch_description():
                 'autostart': True,
                 'node_names': [
                     'map_server',
-                    # 'amcl',
                     'behavior_server',
                     'planner_server',
                     'controller_server',
@@ -114,12 +122,7 @@ def generate_launch_description():
                 ]
             }]
         ),
-        # Node(
-        #     package='rviz2',
-        #     executable='rviz2',
-        #     name='rviz2',
-        #     output='screen'
-        # )
+
         Node(
             package='rviz2', executable='rviz2', output='screen',
             name='rviz2',

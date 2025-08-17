@@ -1,0 +1,64 @@
+%% High contrast init
+%%{init: {
+  "theme":"base",
+  "themeVariables":{
+    "fontFamily":"Arial,Helvetica,sans-serif",
+    "primaryColor":"#FFFFFF",
+    "primaryTextColor":"#000000",
+    "primaryBorderColor":"#000000",
+    "secondaryColor":"#FFFFFF",
+    "secondaryTextColor":"#000000",
+    "tertiaryColor":"#FFFFFF",
+    "tertiaryTextColor":"#000000",
+    "lineColor":"#000000"
+  }
+}}%%
+graph TB
+    subgraph "递送阶段 - Delivery Mode"
+        subgraph "信号触发"
+            DeliveryTrigger[投递信号<br/>/uoa/delivery_signal]
+            DeliveryReady[delivery_ready状态]
+        end
+        subgraph "无人机控制"
+            AutoDeliveryNode[auto_delivery节点]
+            TelloSDK[DJI Tello SDK]
+            TelloDrone[Tello无人机<br/>192.168.87.21]
+        end
+        subgraph "语音交互"
+            VoiceRecognition[语音识别]
+            TTS[文本转语音]
+            VoiceCommands[语音命令解析<br/>模糊匹配]
+        end
+        subgraph "飞行控制"
+            FlightCommands[飞行指令<br/>up/down/left/right<br/>forward/back/land]
+            PoseRectify[姿态校正]
+            SafetyCheck[安全检查]
+        end
+        subgraph "服务接口"
+            ResetService[重置服务<br/>/uoa/reset_delivery_ready]
+        end
+
+        DeliveryTrigger --> AutoDeliveryNode
+        DeliveryReady --> AutoDeliveryNode
+        AutoDeliveryNode --> TelloSDK --> TelloDrone
+        VoiceRecognition --> VoiceCommands --> FlightCommands --> AutoDeliveryNode
+        AutoDeliveryNode --> TTS
+        AutoDeliveryNode --> PoseRectify
+        AutoDeliveryNode --> SafetyCheck
+        ResetService --> DeliveryReady
+        TelloDrone -.->|状态反馈| AutoDeliveryNode
+        SafetyCheck -.->|安全监控| AutoDeliveryNode
+    end
+
+    %% High contrast styles
+    classDef triggerClass fill:#0D47A1,stroke:#000000,stroke-width:2px,color:#FFFFFF
+    classDef droneClass fill:#B71C1C,stroke:#000000,stroke-width:2px,color:#FFFFFF
+    classDef voiceClass fill:#4A148C,stroke:#000000,stroke-width:2px,color:#FFFFFF
+    classDef controlClass fill:#1B5E20,stroke:#000000,stroke-width:2px,color:#FFFFFF
+    classDef serviceClass fill:#E65100,stroke:#000000,stroke-width:2px,color:#FFFFFF
+
+    class DeliveryTrigger,DeliveryReady triggerClass
+    class AutoDeliveryNode,TelloSDK,TelloDrone droneClass
+    class VoiceRecognition,TTS,VoiceCommands voiceClass
+    class FlightCommands,PoseRectify,SafetyCheck controlClass
+    class ResetService serviceClass

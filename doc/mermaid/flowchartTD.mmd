@@ -1,0 +1,132 @@
+%% flowchart TD
+%%     %% Nodes
+%%         A("fab:fa-youtube Starter Guide")
+%%         B("fab:fa-youtube Make Flowchart")
+%%         n1@{ icon: "fa:gem", pos: "b", h: 24}
+%%         C("fa:fa-book-open Learn More")
+%%         D{"Use the editor"}
+%%         n2(Many shapes)@{ shape: delay}
+%%         E(fa:fa-shapes Visual Editor)
+%%         F("fa:fa-chevron-up Add node in toolbar")
+%%         G("fa:fa-comment-dots AI chat")
+%%         H("fa:fa-arrow-left Open AI in side menu")
+%%         I("fa:fa-code Text")
+%%         J(fa:fa-arrow-left Type Mermaid syntax)
+
+%%     %% Edge connections between nodes
+%%         A --> B --> C --> n1 & D & n2
+%%         D -- Build and Design --> E --> F
+%%         D -- Use AI --> G --> H
+%%         D -- Mermaid js --> I --> J
+
+%%     %% Individual node styling. Try the visual editor toolbar for easier styling!
+%%         style E color:#FFFFFF, fill:#AA00FF, stroke:#AA00FF
+%%         style G color:#FFFFFF, stroke:#00C853, fill:#00C853
+%%         style I color:#FFFFFF, stroke:#2962FF, fill:#2962FF
+
+%%     %% You can add notes with two "%" signs in a row!
+
+%% =============================================
+
+graph TB
+
+    %% 外部输入
+    User[用户语音命令] --> |语音识别| VoiceControl[语音控制模块]
+    DeliverySignal[投递信号] --> |Bool消息| AutoDelivery
+    
+    %% 核心节点
+    subgraph "ROS2 核心系统"
+        subgraph "无人机控制节点"
+            AutoDelivery["auto_delivery.py<br/>无人机自动投递节点"]
+            TelloSDK["DJI Tello SDK<br/>无人机硬件接口"]
+            VoiceModule["voice_controller.py<br/>语音识别与TTS"]
+        end
+        
+        subgraph "机器人位置监听节点"
+            RobotListener["robot_position_listener.py<br/>机器人位置监听器"]
+            GoalPoseService["set_robot_goal_pose<br/>目标位置设置服务"]
+        end
+        
+        subgraph "TurtleBot3 系统"
+            TB3Node["turtlebot3_node<br/>机器人控制节点"]
+            DynamixelSDK["Dynamixel SDK<br/>电机控制"]
+            OpenCR["OpenCR 控制板"]
+        end
+        
+        subgraph "视觉SLAM系统"
+            RTABMap["RTAB-Map<br/>视觉SLAM"]
+            StereoCamera["立体相机节点"]
+            Odometry["视觉里程计"]
+        end
+
+        %% 硬件层
+        subgraph "硬件设备"
+            TurtleBot["TurtleBot3 Waffle Pi<br/>移动机器人"]
+            Camera["ZED/立体相机"]
+            Tello["DJI Tello 无人机<br/>192.168.87.21"]
+            Microphone["麦克风"]
+            Speaker["扬声器"]
+        end
+        
+        %% 消息和服务接口
+        subgraph "ROS2 通信接口"
+            Parameters["delivery_ready<br/>goal_position_x/y<br/>distance_threshold"]
+            Topics["/delivery_signal<br/>/localization_pose<br/>/cmd_vel<br/>/odom<br/>/goal_pose"]
+            Services["/uoa/reset_delivery_ready<br/>/set_robot_goal_pose"]
+        end
+    end
+    
+    
+    %% 连接关系
+    AutoDelivery --> |WiFi控制| TelloSDK
+    TelloSDK --> Tello
+    
+    VoiceControl --> |语音命令解析| AutoDelivery
+    VoiceModule --> Microphone
+    VoiceModule --> Speaker
+    
+    RobotListener --> |监听位置| Topics
+    GoalPoseService --> |设置目标| RobotListener
+    
+    TB3Node --> DynamixelSDK
+    DynamixelSDK --> |串口通信| OpenCR
+    OpenCR --> TurtleBot
+    
+    RTABMap --> StereoCamera
+    StereoCamera --> Camera
+    RTABMap --> |位置估计| Topics
+    
+    AutoDelivery <--> |发布/订阅| Topics
+    RobotListener <--> |发布/订阅| Topics
+    TB3Node <--> |发布/订阅| Topics
+    
+    AutoDelivery <--> |调用服务| Services
+    RobotListener <--> |提供服务| Services
+    
+    %% 数据流
+    subgraph "主要数据流"
+        Flow1["机器人到达目标位置"]
+        Flow2["发布投递信号"]
+        Flow3["无人机起飞投递"]
+        Flow4["语音交互控制"]
+        Flow5["无人机着陆"]
+    end
+    
+    Flow1 --> Flow2
+    Flow2 --> Flow3
+    Flow3 --> Flow4
+    Flow4 --> Flow5
+    
+    %% 样式
+    classDef nodeClass fill:#ffffff,stroke:#1976d2,stroke-width:3px,color:#000000
+    classDef hardwareClass fill:#f8bbd9,stroke:#ad1457,stroke-width:3px,color:#000000
+    classDef commClass fill:#c8e6c9,stroke:#388e3c,stroke-width:3px,color:#000000
+    classDef flowClass fill:#fff9c4,stroke:#f57f17,stroke-width:3px,color:#000000
+    classDef inputClass fill:#e1f5fe,stroke:#0277bd,stroke-width:3px,color:#000000
+    
+    class AutoDelivery,RobotListener,TB3Node,RTABMap,TelloSDK,VoiceModule,GoalPoseService,DynamixelSDK,OpenCR,StereoCamera,Odometry nodeClass
+    class Tello,TurtleBot,Camera,Microphone,Speaker hardwareClass
+    class Topics,Services,Parameters commClass
+    class Flow1,Flow2,Flow3,Flow4,Flow5 flowClass
+    class User,DeliverySignal,VoiceControl inputClass
+

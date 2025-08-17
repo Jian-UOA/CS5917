@@ -37,6 +37,7 @@ def generate_launch_description():
     rtabmap_viz    = LaunchConfiguration('rtabmap_viz')
     rviz           = LaunchConfiguration('rviz')
     rviz_cfg       = LaunchConfiguration('rviz_cfg')
+    with_drone     = LaunchConfiguration('with_drone')
     # camera_model   = LaunchConfiguration('camera_model')
 
     # RTAB-Map parameters
@@ -120,7 +121,7 @@ def generate_launch_description():
     )
     
     # Path to RViz config (reuse the demo config)
-    cfg_rviz = os.path.join(
+    rviz_cfg = os.path.join(
         get_package_share_directory('uoa_robot_drone'),
         'config',
         'rviz_vslam.rviz'
@@ -136,8 +137,10 @@ def generate_launch_description():
                                description='Launch RTAB-Map UI'),
         DeclareLaunchArgument('rviz',           default_value='true',
                                description='Launch RViz2'),
-        DeclareLaunchArgument('rviz_cfg',       default_value=cfg_rviz,
+        DeclareLaunchArgument('rviz_cfg',       default_value=rviz_cfg,
                                description='Path to RViz2 config file'),
+        DeclareLaunchArgument('with_drone',     default_value='false', 
+                               description='Enable drone delivery system'),
         # DeclareLaunchArgument('camera_model',   default_value='zed2',
         #                        description='ZED camera model for zed_wrapper'),
         
@@ -360,28 +363,29 @@ def generate_launch_description():
         #     remappings=remappings
         # ),
 
-        # 7) Delivery parcels automatically (only if localization is true)
-        # IncludeLaunchDescription(
-        #     PythonLaunchDescriptionSource([auto_delivery_launch]),
-        #     launch_arguments=[
-        #         ('delivery_ready', 'true'),  # Set delivery ready state to true
-        #         ('localization', localization)  # Pass the localization argument
-        #     ]
-        # ),
+        # 7) Drone delivery system (conditional)
+        IncludeLaunchDescription(
+            PythonLaunchDescriptionSource([auto_delivery_launch]),
+            condition=IfCondition(AndSubstitution(with_drone, localization)),
+            launch_arguments=[
+                ('delivery_ready', 'true'),  # Set delivery ready state to true
+                ('localization', localization)  # Pass the localization argument
+            ]
+        ),
       
-        # # 9) RTAB-Map GUI (optional)
-        # Node(
-        #     condition=IfCondition(rtabmap_viz),
-        #     package='rtabmap_viz', executable='rtabmap_viz', output='screen',
-        #     parameters=[parameters],
-        #     remappings=remappings
-        # ),
+        # 9) RTAB-Map GUI (optional)
+        Node(
+            condition=IfCondition(AndSubstitution(rtabmap_viz, NotSubstitution(localization))),
+            package='rtabmap_viz', executable='rtabmap_viz', output='screen',
+            parameters=[parameters],
+            remappings=remappings
+        ),
 
-        # # 10) RViz2 (optional)
-        # Node(
-        #     condition=IfCondition(AndSubstitution(rviz,NotSubstitution(localization))),
-        #     package='rviz2', executable='rviz2', output='screen',
-        #     name='rviz2',
-        #     arguments=[['-d'], [LaunchConfiguration('rviz_cfg')]]
-        # ),
+        # 10) RViz2 (optional)
+        Node(
+            condition=IfCondition(rviz),
+            package='rviz2', executable='rviz2', output='screen',
+            name='rviz2',
+            arguments=[['-d'], [LaunchConfiguration('rviz_cfg')]]
+        ),
     ])
