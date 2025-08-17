@@ -1,9 +1,4 @@
 # Ignore the files under the folders __pycache__
 __pycache__/
-uoa_robot_drone/uoa_robot_drone/__pycache__/robot_position_listener.cpython-310.pyc
-.gitignore
-cyclonedds.log
-uoa_robot_drone/config/nav2_controller_params.yaml.20250807.bak
-uoa_robot_drone/config/nav2_params.yaml.testing1
-uoa_robot_drone/maps/uoa_robot_drone_vslam_202508051615.yaml.modify_origin_20250807.bak
-.gitignore
+*.log
+*.bak
