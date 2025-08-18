@@ -41,9 +41,9 @@ def generate_launch_description():
         loc = context.launch_configurations['localization'].lower()
     
         if loc == 'true':
-            params['Rtabmap/DetectionRate'] = '5.0'
-        else:
             params['Rtabmap/DetectionRate'] = '15.0'
+        else:
+            params['Rtabmap/DetectionRate'] = '5.0'
         nodes = []
         nodes.append(Node(
             condition=UnlessCondition(localization),
@@ -171,20 +171,13 @@ def generate_launch_description():
             ]
         ),
 
-        # 5) Synchronize stereo streams
-        Node(
-            package='rtabmap_sync', executable='stereo_sync', output='screen',
-            namespace='stereo_camera',
-            remappings=remappings
-        ),
-
-        # 6) Visual Odometry (VO) node
+        # 5) Visual Odometry (VO) node
         Node(
             package='rtabmap_odom', executable='stereo_odometry', output='screen',
             parameters=[parameters],
             remappings=remappings
         ),
 
-        # 7) Dynamically set DetectionRate for SLAM/Localization Node
+        # 6) Dynamically set DetectionRate for SLAM/Localization Node
         OpaqueFunction(function=set_dynamic_detection_rate),
     ])
