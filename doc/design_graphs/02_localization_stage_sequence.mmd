@@ -1,0 +1,24 @@
+sequenceDiagram
+    participant ZED2 as ZED2相机
+    participant Orin as Jetson Orin Nano
+    participant PC as PC
+    participant RTABMAP as rtabmap
+    participant Listener as robot_position_listener
+
+    ZED2->>Orin: 采集图像数据
+    Orin->>Orin: stereo_sync处理
+    Orin->>Orin: stereo_odometry计算
+    Orin->>Orin: convert_image_format转换
+    Orin->>Orin: image_transport(compress)压缩
+    Orin->>PC: 发送压缩图像
+    PC->>PC: image_transport(decompress)解压
+    PC->>RTABMAP: 发送图像数据
+    RTABMAP->>Listener: 发布定位结果
+    Listener->>PC: 位置监听与反馈
+
+%% 2️⃣ 定位阶段时序图
+%% UML描述：
+
+%% ZED2采集图像
+%% Orin Nano处理图像并定位
+%% PC解压图像、rtabmap定位、robot_position_listener监听位置

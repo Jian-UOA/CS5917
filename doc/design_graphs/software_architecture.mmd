@@ -1,0 +1,42 @@
+%%{init: {"theme":"base"}}%%
+flowchart LR
+    subgraph Jetson_Orin_Nano
+        ZED2[ZED2驱动]
+        stereo_sync[stereo_sync]
+        stereo_odom[stereo_odometry]
+        convert_img[convert_image_format]
+        img_transport_c[image_transport(compress)]
+    end
+    subgraph PC
+        img_transport_d[image_transport(decompress)]
+        robot_listener[robot_position_listener]
+        auto_delivery[auto_delivery]
+        rtabmap_viz[rtabmap_viz]
+        navigation2[navigation2]
+        rviz2[rviz2]
+    end
+    subgraph 通信中间件
+        rmw[rmw_cyclonedds_cpp]
+    end
+    ZED2 --> stereo_sync --> stereo_odom
+    stereo_odom --> convert_img
+    convert_img --> img_transport_c
+    img_transport_c --> img_transport_d
+    img_transport_d --> robot_listener
+    robot_listener --> auto_delivery
+    auto_delivery --> navigation2
+    navigation2 --> rviz2
+    auto_delivery --> rtabmap_viz
+    robot_listener -- /uoa/delivery_signal --> auto_delivery
+    navigation2 -- /tb3/cmd_vel --> Turtlebot3
+    auto_delivery -- 控制 --> Drone
+    Jetson_Orin_Nano --> rmw
+    PC --> rmw
+
+%% UML描述：
+
+%% 分为 Jetson Orin Nano、PC 两大部署区
+%% Jetson Orin Nano：ZED2驱动、stereo_sync、stereo_odometry、convert_image_format、image_transport(compress)
+%% PC：image_transport(decompress)、robot_position_listener、auto_delivery、rtabmap_viz、navigation2、rviz2
+%% 通信中间件：rmw_cyclonedds_cpp
+%% 主要话题：/uoa/delivery_signal、/goal_pose、/tb3/cmd_vel 等

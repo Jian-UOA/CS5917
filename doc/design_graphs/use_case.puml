@@ -1,0 +1,25 @@
+@startuml
+actor User
+actor PC
+actor Robot
+actor Drone
+
+rectangle "uoa_robot_drone" {
+  User --> (Mapping)
+  User --> (Navigation)
+  User --> (Localization)
+  User --> (Drone Delivery)
+  Robot --> (Mapping)
+  Robot --> (Localization)
+  Robot --> (Navigation)
+  (Mapping) --> (Localization)
+  (Localization) --> (Drone Delivery)
+  (Localization) --> (Navigation)
+  PC --> (Mapping)
+  PC --> (Localization)
+  PC --> (Drone Delivery)
+  PC --> (Navigation)
+  Drone --> (Drone Delivery)
+}
+
+@enduml

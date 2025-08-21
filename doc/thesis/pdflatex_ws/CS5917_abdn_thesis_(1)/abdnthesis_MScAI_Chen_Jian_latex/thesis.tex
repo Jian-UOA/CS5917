@@ -1,0 +1,126 @@
+\documentclass[MSc]{abdnthesis}
+
+%% For citations, I would recommend natbib for its
+%% flexibility, particularly when named citation styles are used, but
+%% it also has useful features for plain and those of that ilk.
+%% The natbib package gives you the following definitons
+%% that extend the simple \cite:
+%   \citet{key} ==>>                Jones et al. (1990)
+%   \citet*{key} ==>>               Jones, Baker, and Smith (1990)
+%   \citep{key} ==>>                (Jones et al., 1990)
+%   \citep*{key} ==>>               (Jones, Baker, and Smith, 1990)
+%   \citep[chap. 2]{key} ==>>       (Jones et al., 1990, chap. 2)
+%   \citep[e.g.][]{key} ==>>        (e.g. Jones et al., 1990)
+%   \citep[e.g.][p. 32]{key} ==>>   (e.g. Jones et al., p. 32)
+%   \citeauthor{key} ==>>           Jones et al.
+%   \citeauthor*{key} ==>>          Jones, Baker, and Smith
+%   \citeyear{key} ==>>             1990
+
+\usepackage[round,colon,authoryear]{natbib}
+\setlength{\bibsep}{0pt}
+\bibliographystyle{apalike}
+
+\usepackage{array}
+\usepackage{xcolor}
+\usepackage[T1]{fontenc}
+\usepackage{amsmath,amsfonts}
+\usepackage{subcaption}
+\usepackage{rotating} % for sidewaysfigure to rotate wide figures
+\usepackage[export]{adjustbox} % enable relative trim/clip for includegraphics
+\usepackage{seqsplit}
+\usepackage{pdflscape}
+\usepackage{geometry}
+\usepackage{hyperref}
+\usepackage{tikz}
+\usepackage{listings}
+\lstset{
+  basicstyle=\ttfamily\small,
+  breaklines=true,
+  frame=single,
+  columns=fullflexible
+}
+\usetikzlibrary{shadows,arrows.meta}
+
+% \title{Research on Application of Pure Visual SLAM Based on Stereo Camera in Edge Computing Lightweight Embedded System}
+
+\title{Pure Vision SLAM Engineering in Robotic Edge Computing Systems}
+
+\author{Jian Chen}
+
+\school{Department of Computing Science}
+
+
+\date{2025}
+
+\def\sfthing#1#2{\def#1{\mbox{{\small\normalfont\sffamily #2}}}}
+
+\sfthing{\PP}{P}
+\sfthing{\FF}{F}
+
+
+
+\begin{document}
+
+%%%% Create the title page and standard declaration.
+
+\maketitle
+\makedeclaration
+
+%%%% Then the abstract and acknowledgements
+
+\begin{abstract}
+  % An expansion of the title and contraction of the thesis.
+  % 中文版：
+  % 本论文介绍了一种基于双目相机的机器人纯视觉SLAM（Simultaneous Localization and Mapping）系统的工程实现，该系统专为边缘计算轻量级嵌入式系统设计。研究重点在于视觉SLAM技术在机器人领域的实际应用，强调了双目视觉、边缘计算和轻量级。
+  % 软件架构方面，整个软件架构构建于Ubuntu 22.04 LTS 之上，使用Humble版本的ROS2作为通信中间件，在ROS2上构建了Turtlebot3_bringup包、zed-ros2包、rtabmap-ros2包、uoa_robot_drone包、rviz2包和navigation2等包。系统的主要功能包括机器人控制模块、双目视觉图像采集模块、图像格式转换与压缩传输模块、视觉SLAM算法模块、定位监控与发布模块、无人机自动投递模块、导航模块和可视化模块。该系统旨在实时处理双目图像，创建环境地图，同时跟踪机器人在该地图中的位置。实现过程中采用了边缘计算原则，以确保低延迟和高效率，使其适用于资源受限的嵌入式系统部署。
+  % 硬件方面，机器人地盘用的是Turtlebot3 Waffle Pi (SBC:Raspberry Pi Model 4B, OpenCR:STM32F746ZGT6 / 32-bit ARM Cortex®-M7 with FPU (216MHz, 462DMIPS),电池：MVMOD 3S, 2200 mAh 11.1 V 35C Lipo Battery), 嵌入式边缘计算单元用的是Jetson Orin Nano (最大功耗15W, 电池：INIU 65W 20000mAh Power Bank)，相机用的是ZED 2双目相机(分辨率使用VGA，贞率使用15Hz)，远程监控用的是联想Yoga 14S笔记本电脑(处理器: Intel Core i5-1165G7, 内存: 16GB LPDDR4x, 存储: 512GB SSD)，无人机用的是DJI Tello EDU版，设备间通信用的是手机热点(建图、定位、导航阶段用的是5GHz WiFi, 投递阶段用的是2.4GHz WiFi (因为Tello只支持2.4GHz))。
+  % 效果：可以实现实时的地图构建和定位，无人机自动投递等任务。该系统展示了边缘计算在机器人视觉SLAM中的应用潜力。
+  % The software architecture involved in this engineering project consists of several key componets, including a robotic control module, a stereo vision image capture module, an image format converting and compression and transmission module, a visual SLAM algorithm module, a localization monitoring and publisher module, a auto delivery with drone module, a navigation module, and a visual lization module. The system is designed to operate in real-time, processing stereo images to create a map of the environment while simultaneously tracking the robot's position within that map. The implementation leverages edge computing principles to ensure low latency and high efficiency, making it suitable for deployment in resource-constrained embedded systems.
+  % English version:
+  This thesis presents the engineering implementation of a robotic pure vision SLAM (Simultaneous Localization and Mapping) system based on a stereo camera, designed for edge computing embedded systems. The work focuses on the practical application of visual SLAM techniques in robotics, emphasizing the integration of stereo vision, edge computing, and lightweight embedded systems to achieve efficient and effective mapping, localization, multi-agent (robot and drone) collaboration, and navigation in real-time environments.
+  
+  In terms of software architecture, the system is built on Ubuntu 22.04 LTS, utilizing ROS2 Humble as the middleware. Key packages include Turtlebot3\_bringup, zed-ros2, rtabmap-ros2, uoa\_robot\_drone, rviz2, and navigation2. The main functionalities encompass a robotic control module, stereo vision image capture module, image format conversion and compression transmission module, visual SLAM algorithm module, localization monitoring and publishing module, automated drone delivery module, navigation module, and visualization module. The system aims to process stereo images in real-time to create an environmental map while tracking the robot's position within that map. The implementation adheres to edge computing principles to ensure low latency and high efficiency, making it suitable for deployment in resource-constrained embedded systems.
+  
+  The hardware setup includes a Turtlebot3 Waffle Pi robot base (SBC: Raspberry Pi Model 4B, OpenCR: STM32F746ZGT6 / 32-bit ARM Cortex, Battery: MVMOD 3S, 2200 mAh 11.1 V 35C Lipo Battery), an embedded edge computing unit using Jetson Orin Nano (max power 15W, Battery: INIU 65W 20000mAh Power Bank), a ZED 2 stereo camera (resolution set to VGA, frame rate set to 15Hz), a Lenovo Yoga 14S laptop for remote monitoring (Processor: Intel Core i5-1165G7, Memory: 16GB LPDDR4x, Storage: 512GB SSD), and a DJI Tello EDU drone for delivery tasks. The communication between devices is facilitated through a mobile hotspot, utilizing 5GHz WiFi during mapping, localization, and navigation phases, and switching to 2.4GHz WiFi for the delivery phase due to the Tello's compatibility.
+  
+  The system successfully demonstrates real-time mapping and localization capabilities, along with automated drone delivery tasks. This project showcases the potential of edge computing in robotic visual SLAM applications and demonstrates the process of engineering mathematics, computer science, AI and other related knowledge into products.
+
+\end{abstract}
+
+\begin{acknowledgements}
+  % 中文版：
+  % 我首先感谢我的家人和我北京大学的恩师孙加肃教授，是你们的支持让我最终决定在工作多年后重返校园进行全日制、系统化地学习AI领域的知识。感谢阿伯丁大学的易德伟教授，不仅教授了我机器学习、AI应用两门课程，而且在我做本毕业项目的过程中启发了我通过工程化思路将所学到的数学、计算机、AI等理论知识转化为产品从而提升现实生活中的生产力的诸多灵感,让我在该项目过程中极大提升了将机器人工作原理、纯双目视觉SLAM、神经网络、边缘计算、嵌入式系统、导航算法等理论知识通过工程化方式转化为具体产品的能力。
+  % 我还要按授课顺序依次感谢教授我AI课程的各位教授、讲师，是他们让我系统地学习了AI领域的相关专业知识，他们是教授我Symbolic AI课程的Felipe Meneguzzi教授、Yaji Sripada博士，与易德伟教授一起教授我Machine Learning和Applied Artificial Intelligence两门课程的钟明军博士，教授我Evaluation of AI Systems 课程的赵伟博士，共同教授我Software Agents And Multi-Agent Systems 和 Knowledge Representation And Reasoning两门课程的Rafael Cardoso博士和Leonardo Amado博士，与Yaji Sripada博士一起教授我Natural Language Generation课程的Ehud Reiter教授，以及教授我Data Mining with Deep Learning课程的Arabella Sinclair 博士。
+  % 今后我会将更多的AI领域的知识通过工程化的方式应用到产品中去，让这些知识在推动人类生产力发展方面发挥更大作用，这或许是对大家最好的感谢方式！
+  
+  % English version:
+  I would like to express my sincere gratitude to all those who have supported me throughout this research journey.
+  
+  First and foremost, I am deeply grateful to my family and my mentor Professor Jiasu Sun from Peking University, whose unwavering support enabled me to make the decision to return to university campus for full-time, systematic study in the field of Artificial Intelligence after years of professional work in industry.
+  
+  I extend my heartfelt thanks to Professor Dewei Yi at the University of Aberdeen, who not only taught me \textit{Machine Learning} and \textit{Applied Artificial Intelligence} courses, but also inspired me during this dissertation project to transform theoretical knowledge in mathematics, computer science, and AI into practical engineering solutions that enhance real-world productivity. Through this project, I have significantly improved my ability to convert theoretical concepts in robotics, stereo visual SLAM, neural networks, edge computing, embedded systems, and navigation algorithms into concrete products through engineering approaches.
+  
+  I would also like to acknowledge, in chronological order of instruction, all the professors and lecturers who taught me AI courses and provided me with systematic knowledge in the field of Artificial Intelligence: Professor Felipe Meneguzzi and Dr. Yaji Sripada for \textit{Symbolic AI}; Dr. Mingjun Zhong, who together with Professor Dewei Yi taught \textit{Machine Learning} and \textit{Applied Artificial Intelligence}; Dr. Wei Zhao for \textit{Evaluation of AI Systems}; Dr. Rafael Cardoso and Dr. Leonardo Amado for \textit{Software Agents and Multi-Agent Systems}, and \textit{Knowledge Representation and Reasoning}; Professor Ehud Reiter, who together with Dr. Yaji Sripada taught \textit{Natural Language Generation}; and Dr. Arabella Sinclair for \textit{Data Mining with Deep Learning}.
+  
+  Looking forward, I am committed to applying AI knowledge through engineering approaches to develop practical products that contribute to human productivity advancement, which I believe is the best way to honor the education and guidance I have received from all these remarkable educators.
+\end{acknowledgements}
+
+\tableofcontents
+
+
+\include{introduction}
+\include{theoretical_foundations}
+\include{design}
+\include{implementation}
+\include{evaluation}
+\include{conclusion}
+
+
+\bibliography{references}
+
+\appendix
+% \include{proof}
+\include{rosgraphs}
+\include{hardware_specifics.tex}
+
+\end{document}

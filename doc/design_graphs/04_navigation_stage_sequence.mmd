@@ -1,0 +1,26 @@
+sequenceDiagram
+    participant 用户
+    participant PC
+    participant Navigation2 as navigation2
+    participant TB3 as Turtlebot3
+    participant Listener as robot_position_listener
+    participant RTABMAP as rtabmap
+    participant RVIZ2 as rviz2
+
+    用户->>PC: 发起导航请求
+    PC->>Navigation2: 发送目标位置
+    Navigation2->>TB3: 发布/cmd_vel控制指令
+    TB3-->>Navigation2: 里程计反馈
+    Listener-->>Navigation2: 位置反馈
+    RTABMAP-->>Navigation2: 定位反馈
+    Navigation2->>RVIZ2: 发布导航状态
+    RVIZ2-->>用户: 可视化导航过程
+
+
+%% 4️⃣ 导航阶段时序图
+%% UML描述：
+
+%% 用户或上层节点发起导航请求
+%% navigation2规划路径并控制Turtlebot3
+%% robot_position_listener/rtabmap提供定位反馈
+%% rviz2可视化导航过程

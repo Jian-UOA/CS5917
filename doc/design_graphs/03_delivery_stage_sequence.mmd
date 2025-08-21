@@ -1,0 +1,22 @@
+sequenceDiagram
+    participant 用户
+    participant PC
+    participant AutoDelivery as auto_delivery
+    participant Drone
+    participant Listener as robot_position_listener
+
+    用户->>PC: 发起投递任务
+    PC->>AutoDelivery: 发送投递命令
+    AutoDelivery->>Drone: 控制起飞/投递
+    AutoDelivery->>Listener: 请求机器人位置
+    Listener-->>AutoDelivery: 位置反馈
+    Drone-->>AutoDelivery: 状态反馈
+    AutoDelivery-->>PC: 任务完成反馈
+
+%% 3️⃣ 递送阶段时序图
+%% UML描述：
+
+%% 用户发起投递任务
+%% PC发送命令到auto_delivery
+%% auto_delivery控制Drone
+%% robot_position_listener监听机器人位置

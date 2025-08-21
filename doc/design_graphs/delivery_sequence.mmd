@@ -1,0 +1,26 @@
+%%{init: {"theme":"base"}}%%
+sequenceDiagram
+    participant 用户
+    participant PC
+    participant OrinNano
+    participant Turtlebot3
+    participant auto_delivery
+    participant Drone
+
+    用户->>PC: 发起投递任务
+    PC->>OrinNano: 发送投递命令
+    OrinNano->>Turtlebot3: 定位请求
+    Turtlebot3-->>OrinNano: 位置反馈
+    OrinNano->>auto_delivery: 发布 delivery_signal
+    auto_delivery->>Drone: 控制起飞/投递
+    Drone-->>auto_delivery: 状态反馈
+    auto_delivery-->>PC: 任务完成反馈
+
+%% UML描述：
+
+%% 用户发起投递任务
+%% PC 发送命令到 Jetson Orin Nano
+%% Orin Nano 运行 robot_position_listener，定位 Turtlebot3
+%% 定位成功后，auto_delivery 节点启动无人机
+%% Drone 执行投递
+%% PC/大屏幕监控任务状态

@@ -1,0 +1,54 @@
+sequenceDiagram
+    participant ZED2 as Stereo Camera
+    participant Orin as Jetson Orin Nano
+    participant rmw as ROS Middleware
+    participant PC as PC
+
+    ZED2->>+rmw: [1] Capture and Publish Stereo Image Topics
+    rmw->>+Orin: [2] convert_image_format nodes subscribe Stereo Image Topics
+    Orin->>Orin: [3] convert_image_format (bgra8 -> bgr8)
+    Orin->>rmw: [4] convert_image_format nodes publish bgr8 image topics
+    rmw->>Orin: [5] image_transport nodes subscribe bgr8 image topics
+    Orin->>Orin: [6] image_transport nodes compress bgr8 image topics
+    Orin->>rmw: [7] image_transport nodes publish compressed image topics
+    rmw->>PC: [8] image_transport nodes subscribe compressed image topics
+    PC->>PC: [9] image_transport nodes decompress image topics
+    PC->>rmw: [10] image_transport nodes publish raw image topics
+    rmw->>PC: [11] rtabmap_viz node subscribes raw image topics
+    rmw->>PC: [11] rviz2 node subscribes raw image topics
+    rmw->>Orin: [5] stereo_odometry node subscribes bgr8 image topics
+    Orin->>Orin: [6] stereo_odometry computes Odometry
+    Orin->>rmw: [7] stereo_odometry publishes Odometry Data
+    rmw->>PC: [8] rtabmap_viz node subscribes Odometry Data
+    rmw->>PC: [8] rviz2 node subscribes Odometry Data
+    rmw->>Orin: [8] rtabmap node subscribes Odometry Data
+    rmw->>Orin: [5] rtabmap node subscribes bgr8 Images
+    Orin->>Orin: [9] rtabmap computes keypoints, map data, point cloud etc.
+    Orin->>rmw: [10] rtabmap publishes keypoints, map data, point cloud etc.
+    rmw->>PC: [11] rtabmap_viz node subscribes keypoints, map data, point cloud etc.
+    rmw->>PC: [11] rviz2 node subscribes keypoints, map data, point cloud etc.
+    PC->>PC: [12] rtabmap_viz node displays keypoints, map data, point cloud etc.
+    PC->>PC: [12] rviz2 node displays keypoints, map data, point cloud etc.
+
+%% 信息条详细注释（含数据流、处理内容）：
+%% [1] ZED2->>rmw: ZED2相机采集左/右图像，通过/zed/zed_node/left/right/image_rect_color话题发布到rmw
+%% [2] rmw->>Orin: Orin节点订阅rmw上的左/右图像话题，获取原始图像数据
+%% [4] Orin->>rmw: Orin节点将转换后的bgr8图像通过/uoa/orin/left/right/image_rect_bgr话题发布到rmw
+%% [5] rmw->>Orin: Orin节点订阅bgr8图像话题，准备进行压缩处理
+%% [7] Orin->>rmw: Orin节点将压缩后的图像通过/uoa/cs5917/left/right/image_rect_color/compressed话题发布到rmw
+%% [8] rmw->>PC: PC节点订阅压缩图像话题，获取压缩后的图像数据
+%% [10] PC->>rmw: PC节点将解压后的原始图像通过/uoa/cs5917/left/right/image_rect_color话题发布到rmw，供可视化节点使用
+%% [11] rmw->>PC: PC节点（如rtabmap_viz）订阅原始图像话题，用于特征点显示
+%% [13] Orin->>rmw: Orin节点将计算得到的里程计数据通过/vo/odom话题发布到rmw
+%% [14] rmw->>PC: PC节点（如rtabmap_viz、rviz2）订阅里程计话题，用于可视化和SLAM
+%% [14] rmw->>Orin: Orin节点（rtabmap）订阅里程计话题，用于建图和定位
+%% [16] Orin->>rmw: Orin节点将建图结果（地图数据、特征点等）通过/rtabmap/mapData、/rtabmap/mapGraph话题发布到rmw
+%% [17] rmw->>PC: PC节点（如rtabmap_viz、rviz2）订阅地图数据话题，用于地图和点云显示
+
+%% [1] ZED2->>rmw: Stereo Camera (i.e., /zed/zed_node) on Jetson Orin Nano captures stereo (left/right) images and publishes them to topics (/zed/zed_node/left/image_rect_color and /zed/zed_node/right/image_rect_color)
+%% [2] rmw->>Orin: convert_image_format nodes (convert_format_left and convert_format_right) on Jetson Orin Nano subscribe to the stereo image topics (/zed/zed_node/left/image_rect_color and /zed/zed_node/right/image_rect_color)
+%% [3] Orin->>Orin: convert_image_format nodes (convert_format_left and convert_format_right) on Jetson Orin Nano convert the image format from bgra8 to bgr8
+%% [4] Orin->>rmw: convert_image_format nodes (convert_format_left and convert_format_right) publish the converted bgr8 images to topics (/uoa/orin/left/image_rect_bgr and /uoa/orin/right/image_rect_bgr)
+%% [5] rmw->>Orin: image_transport nodes (image_transport_left and image_transport_right) on Jetson Orin Nano subscribe to the bgr8 image topics (/u
+
+
