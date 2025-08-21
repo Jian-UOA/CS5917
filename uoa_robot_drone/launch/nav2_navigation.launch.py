@@ -58,7 +58,7 @@ def generate_launch_description():
                 {'use_sim_time': LaunchConfiguration('use_sim_time')},
                 robot_base_frame,
             ],
-            arguments=['--ros-args', '--log-level', 'DEBUG'],
+            arguments=['--ros-args', '--log-level', 'INFO'],
             remappings=remappings
         ),
         Node(
@@ -70,7 +70,7 @@ def generate_launch_description():
                 {'use_sim_time': LaunchConfiguration('use_sim_time')},
                 robot_base_frame,
             ],
-            arguments=['--ros-args', '--log-level', 'DEBUG'],
+            arguments=['--ros-args', '--log-level', 'INFO'],
             remappings=remappings,
         ),
         Node(
@@ -82,7 +82,7 @@ def generate_launch_description():
                 {'use_sim_time': LaunchConfiguration('use_sim_time')},
                 robot_base_frame,
             ],
-            arguments=['--ros-args', '--log-level', 'DEBUG'],
+            arguments=['--ros-args', '--log-level', 'INFO'],
             remappings=remappings
         ),
         Node(
@@ -94,7 +94,7 @@ def generate_launch_description():
                 {'use_sim_time': LaunchConfiguration('use_sim_time')},
                 robot_base_frame,
             ],
-            arguments=['--ros-args', '--log-level', 'DEBUG'],
+            arguments=['--ros-args', '--log-level', 'INFO'],
             remappings=remappings
         ),
         Node(
@@ -102,7 +102,7 @@ def generate_launch_description():
             executable='waypoint_follower',
             output='screen',
             parameters=[{'use_sim_time': LaunchConfiguration('use_sim_time')}],
-            arguments=['--ros-args', '--log-level', 'DEBUG'],
+            arguments=['--ros-args', '--log-level', 'INFO'],
             remappings=remappings
         ),
         Node(
