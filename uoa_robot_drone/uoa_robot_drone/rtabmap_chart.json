@@ -1,0 +1,83 @@
+{
+  "type": "bar",
+  "data": {
+    "labels": [
+      "Rate (s)",
+      "Conversion (s)",
+      "RTAB-Map Time (s)",
+      "Maps Update (s)",
+      "Pub Time (s)",
+      "Delay (s)"
+    ],
+    "datasets": [
+      {
+        "label": "Maximum",
+        "data": [
+          0.07,
+          0.016,
+          0.1699,
+          0.1266,
+          0.0696,
+          0.4952
+        ],
+        "backgroundColor": "#4CAF50",
+        "borderColor": "#388E3C",
+        "borderWidth": 1
+      },
+      {
+        "label": "Minimum",
+        "data": [
+          0.07,
+          0.0013,
+          0.0258,
+          0.0005,
+          0.0001,
+          0.1316
+        ],
+        "backgroundColor": "#F44336",
+        "borderColor": "#D32F2F",
+        "borderWidth": 1
+      },
+      {
+        "label": "Average",
+        "data": [
+          0.07,
+          0.004713576158940397,
+          0.04307941501103753,
+          0.013204083885209713,
+          0.013038134657836644,
+          0.22191175496688742
+        ],
+        "backgroundColor": "#2196F3",
+        "borderColor": "#1976D2",
+        "borderWidth": 1
+      }
+    ]
+  },
+  "options": {
+    "plugins": {
+      "title": {
+        "display": true,
+        "text": "RTAB-Map Metrics"
+      },
+      "legend": {
+        "display": true
+      }
+    },
+    "scales": {
+      "y": {
+        "beginAtZero": true,
+        "title": {
+          "display": true,
+          "text": "Value (s)"
+        }
+      },
+      "x": {
+        "title": {
+          "display": true,
+          "text": "Metrics"
+        }
+      }
+    }
+  }
+}

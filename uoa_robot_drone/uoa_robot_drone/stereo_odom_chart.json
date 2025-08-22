@@ -1,0 +1,79 @@
+{
+  "type": "bar",
+  "data": {
+    "labels": [
+      "Quality",
+      "Std Dev (Pos, m)",
+      "Std Dev (Rot, rad)",
+      "Update Time (s)",
+      "Delay (s)"
+    ],
+    "datasets": [
+      {
+        "label": "Maximum",
+        "data": [
+          164,
+          99.995,
+          99.995,
+          0.14782,
+          0.391312
+        ],
+        "backgroundColor": "#4CAF50",
+        "borderColor": "#388E3C",
+        "borderWidth": 1
+      },
+      {
+        "label": "Minimum",
+        "data": [
+          0,
+          0.000472,
+          0.000173,
+          0.011475,
+          0.079908
+        ],
+        "backgroundColor": "#F44336",
+        "borderColor": "#D32F2F",
+        "borderWidth": 1
+      },
+      {
+        "label": "Average",
+        "data": [
+          104.33131672597865,
+          0.04385504733096086,
+          0.1111575975088968,
+          0.04621102526690391,
+          0.13091514661921708
+        ],
+        "backgroundColor": "#2196F3",
+        "borderColor": "#1976D2",
+        "borderWidth": 1
+      }
+    ]
+  },
+  "options": {
+    "plugins": {
+      "title": {
+        "display": true,
+        "text": "Stereo Odometry Metrics"
+      },
+      "legend": {
+        "display": true
+      }
+    },
+    "scales": {
+      "y": {
+        "beginAtZero": true,
+        "title": {
+          "display": true,
+          "text": "Value"
+        }
+      },
+      "x": {
+        "title": {
+          "display": true,
+          "text": "Metrics"
+        }
+      }
+    }
+  }
+}

@@ -78,6 +78,7 @@ class AutoDelivery(Node):
 
         self.srv = self.create_service(SetBool, 'reset_delivery_ready', self.reset_delivery_ready_callback)
 
+    # Connect to Tello drone
     def connect_to_tello(self):
         self.get_logger().debug('[connect_to_tello] Start')
         while True:
@@ -105,6 +106,7 @@ class AutoDelivery(Node):
         except Exception as e:
             self.get_logger().error(f'[connect_to_tello] Error getting battery: {e}')
 
+    # Keep the connection alive
     def keep_alive(self):
         """Send a keepalive packet to prevent the drone from landing after 15 seconds."""
         
@@ -124,6 +126,7 @@ class AutoDelivery(Node):
             # Attempt to reconnect if keepalive fails
             self.connect_to_tello()
 
+    # Delivery callback
     def delivery_callback(self, msg):
         if not self.delivery_ready:
             return
@@ -158,21 +161,14 @@ class AutoDelivery(Node):
                 asyncio.run(speak("1"))
                 self.get_logger().debug('Takeoff!')
                 asyncio.run(speak("Takeoff!"))
-                # self.tello.enable_mission_pads()
-                # self.tello.set_mission_pad_detection_direction(2)
+                
                 self.tello.takeoff()
                 time.sleep(5)
                
-                # mid_from = self.tello.get_state_field('mid')
-                # self.get_logger().info(f"Detected MID: {mid_from}")
-
                 self.tello.move_up(130)
                 time.sleep(2)
                 forward_distance = 230
                 self.tello.move_forward(forward_distance)
-                # time.sleep(5)
-                
-                # self.tello.rotate_clockwise(180)
 
                 self.get_logger().debug(self.customer_request_land_text)
                 asyncio.run(speak(self.customer_request_land_text))
@@ -188,76 +184,6 @@ class AutoDelivery(Node):
 
                 listen_for_land_command(on_land_callback=self.voice_control_callback)
 
-
-                # self.tello.land()
-                # time.sleep(5)
-                # self.get_logger().info('Delivery completed.')
-                # self.delivery_ready = False
-                # self.current_delivery_signal.data = False
-                # self.get_logger().debug(f'delivery_ready set to {self.delivery_ready}, waiting for reset...')
-                
-                # # time.sleep(2)
-                # self.get_logger().debug(self.prepare_return_text)
-                # asyncio.run(speak(self.prepare_return_text))
-                
-                # # time.sleep(2)
-                # asyncio.run(speak("5"))
-                # asyncio.run(speak("4"))
-                # asyncio.run(speak("3"))
-                # asyncio.run(speak("2"))
-                # asyncio.run(speak("1"))
-                # asyncio.run(speak("Takeoff!"))
-
-                # self.tello.enable_mission_pads()
-                # self.tello.set_mission_pad_detection_direction(2)
-                # self.tello.takeoff()
-
-                # mid_from = self.tello.get_state_field('mid')
-                # self.get_logger().info(f"Detected MID: {mid_from} at customer's location")
-                
-                # self.get_logger().debug(self.customer_goodbye_text)
-                # asyncio.run(speak(self.customer_goodbye_text))
-                
-                # # if mid_from < 1:
-                # #     mid_from = self.tello.get_state_field('mid')
-                # #     self.get_logger().info(f"Second time detected MID: {mid_from} at customer's location")
-                
-                # if mid_from >= 1:
-                #     self.get_logger().info('Starting return to base vehicle...')
-                #     cmd = f'go 0 0 110 20 m{mid_from}' # go x y z speed mid
-                #     while not self.tello.send_control_command(cmd):
-                #         time.sleep(8)
-                #         self.tello.send_control_command(cmd)
-                #         break
-                #     self.pose_rectify()
-                # else:
-                #     self.get_logger().info('No MID detected, moving forward to search for MID...')
-                #     while not self.tello.send_control_command(f'forward {forward_distance}'):
-                #         time.sleep(8)
-                #         self.tello.send_control_command(f'forward {forward_distance}')
-                #     self.tello.enable_mission_pads()
-                #     self.tello.set_mission_pad_detection_direction(2)
-                #     self.tello.move_down(100)
-                #     time.sleep(3)
-                #     mid_from = self.tello.get_state_field('mid')
-                #     self.get_logger().info(f"Detected MID: {mid_from} after moving forward")
-                #     if mid_from < 1:
-                #         self.get_logger().info('No MID detected, rotating to search for MID...')
-                #         while mid_from < 1:
-                #             asyncio.run(speak(self.seeking_base_vehicle_text))
-                #             self.tello.rotate_clockwise(15)
-                #             time.sleep(0.5)
-                #             yaw = self.tello.get_yaw()
-                #             mid_from = self.tello.get_state_field('mid')
-                #             self.get_logger().info(f"Detected MID: {mid_from} at yaw {yaw}")
-                #             if mid_from >= 1:
-                #                 self.get_logger().info(f'Detected Base Vehicle ID: {mid_from}. Preparing for landing.')
-                #                 asyncio.run(speak(f"Detected Base Vehicle ID: {mid_from}."))
-                #                 break
-                #         self.pose_rectify()
-                # self.get_logger().debug(self.land_ready_text)
-                # asyncio.run(speak(self.land_ready_text))
-                # listen_for_land_command(on_land_callback=self.voice_control_callback)     
         except Exception as e:
             self.get_logger().error(f'Error during delivery: {e}')
             self.delivery_ready = False
