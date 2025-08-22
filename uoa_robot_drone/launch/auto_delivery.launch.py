@@ -1,3 +1,26 @@
+'''
+auto_delivery.launch.py
+Launch file for the automated delivery system
+
+This launch file starts the auto_delivery node and the robot_position_listener node.
+It includes launch arguments to enable or disable subscription to the /goal_pose topic,
+as well as to set the initial state of the delivery process.
+
+Author: Jian Chen
+Email: j.chen3.24@abdn.ac.uk
+
+Prerequisites:
+- ROS2 installed
+- Tello drone connected to the same network
+- Required Python packages installed
+
+Example usage:
+- ros2 launch uoa_robot_drone auto_delivery.launch.py
+- ros2 service call /uoa/auto_delivery/reset_delivery_ready std_srvs/srv/SetBool "{data: true}"
+- ros2 topic pub /uoa/delivery_signal std_msgs/Bool "{data: true}"
+- ros2 topic pub /uoa/delivery_signal std_msgs/Bool "{data: false}"
+'''
+
 from launch import LaunchDescription
 from launch_ros.actions import Node
 from launch.actions import DeclareLaunchArgument

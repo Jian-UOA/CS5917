@@ -1,6 +1,10 @@
 """
 orin_stereo_vslam.launch.py
 
+This launch file starts six nodes, including two image format conversion nodes, two compression nodes, and two RTAB-Map nodes (one for odometry and one for mapping or localization).
+
+Author: Jian Chen
+Email: j.chen3.24@abdn.ac.uk
 
 Pre-requisites:
   Source your ROS2 workspace: `source ~/colcon_ws/install/setup.bash`
@@ -11,9 +15,6 @@ Example:
 Launch arguments:
   use_sim_time  – if true, use /clock
   localization  – if true, run in localization-only mode
-  rtabmap_viz   – if true, start the RTAB-Map GUI
-  rviz          – if true, start RViz2
-  rviz_cfg      – path to RViz config
 """
 
 import os
@@ -171,20 +172,13 @@ def generate_launch_description():
             ]
         ),
 
-        # 5) Synchronize stereo streams
-        Node(
-            package='rtabmap_sync', executable='stereo_sync', output='screen',
-            namespace='stereo_camera',
-            remappings=remappings
-        ),
-
-        # 6) Visual Odometry (VO) node
+        # 5) Visual Odometry (VO) node
         Node(
             package='rtabmap_odom', executable='stereo_odometry', output='screen',
             parameters=[parameters],
             remappings=remappings
         ),
 
-        # 7) Dynamically set DetectionRate for SLAM/Localization Node
+        # 6) Dynamically set DetectionRate for SLAM/Localization Node
         OpaqueFunction(function=set_dynamic_detection_rate),
     ])

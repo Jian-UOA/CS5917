@@ -1,3 +1,21 @@
+'''
+ConvertImageFormat node
+
+This node subscribes to an image topic, converts the image format, and publishes the converted image.
+
+Author: Jian Chen
+Email: j.chen3.24@abdn.ac.uk
+
+Prerequisites:
+- ROS2 installed
+- Required Python packages installed
+
+Example usage:
+- ros2 run convert_image_format convert_image_format --ros-args -p from_format:=bgra8 -p to_format:=bgr8 -p subscription:=/zed/zed_node/left/image_rect_color -p publisher:=/zed/zed_node/left/image_rect_bgr
+
+'''
+
+
 import rclpy
 from rclpy.node import Node
 from sensor_msgs.msg import Image

@@ -1,7 +1,10 @@
 """
-# pc_stereo_vslam.launch.py
+pc_stereo_vslam.launch.py
 
-# Launch file for PC stereo visual SLAM using RTAB-Map
+Launch file for PC stereo visual SLAM using RTAB-Map
+
+Author: Jian Chen
+Email: j.chen3.24@abdn.ac.uk
 
 Pre-requisites:
   Source your ROS2 workspace: `source ~/ros2_ws/install/setup.bash`

@@ -1,3 +1,23 @@
+'''
+nav2_navigation.launch.py
+Launch file for the navigation stack
+
+This launch file starts the navigation stack for the robot, including the map server, behavior server, and other components.
+
+Author: Jian Chen
+Email: j.chen3.24@abdn.ac.uk
+
+Prerequisites:
+- ROS2 installed
+- Tello drone connected to the same network
+- Required Python packages installed
+
+Example usage:
+- ros2 launch uoa_robot_drone nav2_navigation.launch.py
+- ros2 launch uoa_robot_drone nav2_navigation.launch.py map:=/path/to/your/map.yaml use_sim_time:=true rviz_cfg:=/path/to/your/rviz_config.rviz
+
+'''
+
 from launch import LaunchDescription
 from launch_ros.actions import Node
 from launch.actions import DeclareLaunchArgument

@@ -1,3 +1,7 @@
+'''
+Setup configuration for the convert_image_format package
+'''
+
 from setuptools import find_packages, setup
 
 package_name = 'convert_image_format'
@@ -15,7 +19,7 @@ setup(
     zip_safe=True,
     maintainer='Jian Chen',
     maintainer_email='j.chen3.24@abdn.ac.uk',
-    description='Convert rgba8 to rgb8',
+    description='Convert from_format (Default: rgba8) to to_format (Default: rgb8)',
     license='Apache-2.0',
     tests_require=['pytest'],
     entry_points={

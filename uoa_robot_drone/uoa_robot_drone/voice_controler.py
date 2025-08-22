@@ -1,3 +1,18 @@
+'''
+Voice control for the drone
+This module handles voice commands for controlling the drone, including takeoff, landing, and navigation.
+It uses speech recognition to listen for specific commands and text-to-speech to provide audio feedback.
+
+Author: Jian Chen
+Email: j.chen3.24@abdn.ac.uk
+
+Prerequisites:
+- Microphone access for voice recognition
+- Speakers or headphones for audio feedback
+- Internet connection for online speech recognition and synthesis
+
+'''
+
 import time
 import asyncio
 import os
