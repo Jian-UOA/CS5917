@@ -10,16 +10,6 @@ The followings are the use case and outcomes of this engineering.
 ## Use Case for this engineering
 <img width="653" height="378" alt="image" src="https://github.com/user-attachments/assets/5435171e-9a3d-4703-a439-39c0df30596f" />
 
-There are **four actors** in the use case:
-
-• **User:** The user can control the robot to move around, set a target position, and monitor the robot’s status.
-
-• **Robot:** The robot can perform mapping, localization, and navigation tasks, and can also deliver items using a drone.
-
-• **Drone:** The drone can be controlled by the robot to deliver items to a specified target position.
-
-• **PC:** The PC is a personal computer that runs the uoa_robot_drone engineering package, which includes nodes for monitoring the robot’s status and controlling the drone.
-
 There are **four main use cases**:
 
 • **Mapping:** The robot can perform mapping tasks to create a map of the environment.
